@@ -28,9 +28,20 @@ int main(int argc, char *argv[]){
     // Set each value in PAS to 0
     for (int i = 0; i < MAX_PAS_LENGTH; i++)
         PAS[i] = 0;
-    
+    // Create file pointer
+    FILE *fp;
     //TODO read from command line and put values from input into PAS
-
+    // Open the File
+    fp = fopen(argv[1], "r");
+    // We don't know the size of the commands given to use thus we use a while loop
+    while (fscanf(fp, "%d %d %d", IR[0], IR[1], IR[2]) == 1){
+        PAS[PC] = IR[0];
+        PAS[PC + 1] = IR[1];
+        PAS[PC + 2] = IR[2];
+        PC += 3;
+    }
+    // Close File
+    fclose(fp);
     //TODO set up registers based on location of IC
 
     //TODO implement fetch & execute cycle
@@ -61,4 +72,5 @@ void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, in
     printf("\tstack : ");
     for (i = MAX_PAS_LENGTH - 1; i >= SP; i--)
         printf("%d ", pas[i]);
-    printf("\n");}
+    printf("\n");
+}
