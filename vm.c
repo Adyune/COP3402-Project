@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MAX_PAS_LENGTH 500
 
@@ -33,18 +34,135 @@ int main(int argc, char *argv[]){
     //TODO read from command line and put values from input into PAS
     // Open the File
     fp = fopen(argv[1], "r");
+    // Used to catch errors in opening the file
+    if (fp == NULL){
+        printf("File Not Found");
+        exit(1);
+    }
     // We don't know the size of the commands given to use thus we use a while loop
-    while (fscanf(fp, "%d %d %d", IR[0], IR[1], IR[2]) == 1){
-        PAS[PC] = IR[0];
-        PAS[PC + 1] = IR[1];
-        PAS[PC + 2] = IR[2];
-        PC += 3;
+    // and scan until we reach the end of the file
+    while (fscanf(fp, "%d %d %d", &IR[0], &IR[1], &IR[2]) != EOF){
+        PAS[IC] = IR[0];
+        PAS[IC + 1] = IR[1];
+        PAS[IC + 2] = IR[2];
+        //printf("%d %d %d\n", PAS[IC],  PAS[IC + 1],  PAS[IC + 2]); // Test if the commands were scanned correctly
+        IC += 3;
     }
     // Close File
     fclose(fp);
-    //TODO set up registers based on location of IC
+
+    //set up registers based on location of IC
+    GP = IC;
+    DP = IC - 1;
+    // FREE Can be allocated to any amount for this assignment
+    FREE = IC + 20; 
+    BP = IC;
+    PC = 0;
+    SP = MAX_PAS_LENGTH;
+
+    // Print the column headers to console
+    printf("\t\tPC\tBP\tSP\tDP\tData\n");
+    printf("Inital values:\t%d\t%d\t%d\t%d\n", PC, BP, SP, DP);
 
     //TODO implement fetch & execute cycle
+    int flag = 1; 
+    // Use while loop with a switch case to determine the type of command
+    while(flag){
+        switch (PAS[PC])
+        {
+        // LIT 0, M
+        case 1:
+            break;
+        // OPR 0, # use another switch case to determine operation
+        case 2:
+            switch (PAS[PC + 2])
+            {
+            // RTN
+            case 0:
+                break;
+            // NEG
+            case 1:
+                break;
+            // ADD
+            case 2:
+                break;
+            // SUB
+            case 3:
+                break;
+            // MUL
+            case 4:
+                break;
+            // DIV
+            case 5:
+                break;
+            // ODD
+            case 6:
+                break;
+            // MOD
+            case 7:
+                break;
+            // EQL
+            case 8:
+                break;
+            // NEQ
+            case 9:
+                break;
+            // LSS
+            case 10:
+                break;
+            // LEQ
+            case 11:
+                break;
+            // GTR
+            case 12:
+                break;
+            // GEQ
+            case 13:
+                break;
+            default:
+                break;
+            }
+            break;
+        // LOD L, M
+        case 3:
+            break;
+        // CAL L, M
+        case 4:
+            break;
+        // INC 0, M
+        case 5:
+            break;
+        // INC 0, M
+        case 6:
+            break;
+        // JMP 0, M
+        case 7:
+            break;
+        // JPC 0, M
+        case 8:
+            break;
+        // SYS 0, #
+        case 9:
+            switch (PAS[PC + 2])
+            {
+            // Write the top stack element or data element or data element
+            case 1:
+                break;
+            // Read in input from the user and store it on top of the stack (or data section)
+            case 2:
+                break;
+            // End of program
+            case 3:
+                flag = 0;
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 int base(int L)
