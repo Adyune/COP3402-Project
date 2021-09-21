@@ -180,28 +180,50 @@ int base(int L)
 
 // Pseudo code for implementing a fetch execution
 
-01 – LIT    0,  M 		if bp == gp then {dp  dp + 1; pas[dp]  M;}
- else {sp  sp – 1; pas[sp]  M;}
+/*01 – LIT    0,  M 		if bp == gp then {dp  dp + 1; pas[dp]  M;}
+ else {sp  sp – 1; pas[sp]  M;}*/
+
+if bp == gp
+    {dp -> dp + 1;
+     pas[dp]-> M;}
+        else 
+        {sp -> sp - 1;
+         pas[sp] -> M;}
+
 
 02 – OPR  0, #		(0 <= # <= 13)
 0	RTN		sp  bp + 1;
 bp  pas[sp - 2];
 pc  pas[sp - 3];
 
-				1	NEG		if bp == gp then pas[dp]  -1 * pas[dp]
+				/*1	NEG		if bp == gp then pas[dp]  -1 * pas[dp]
 									else  pas[sp]  -1 * pas[sp]
 
-				2	ADD		if bp == gp 
-then {dp  dp - 1; 
-          pas[dp]  pas[dp] + pas[dp + 1]}
-else   {sp  sp + 1; 
-           pas[sp]  pas[sp] + pas[sp - 1]}
+				2	ADD		if bp == gp */
+	
+if bp == gp 
+{{dp <- dp - 1; 
+          pas[dp] <- pas[dp] + pas[dp + 1]}
+else   {sp <- sp + 1; 
+           pas[sp] <- pas[sp] + pas[sp - 1]}
+then {dp <- dp - 1; 
+          pas[dp] <- pas[dp] + pas[dp + 1]}
+else   {sp <- sp + 1; 
+           pas[sp] <- pas[sp] + pas[sp - 1]}
+	   
 
-3	SUB		if bp == gp 
+/*3	SUB		if bp == gp 
 then { dp  dp - 1; 
           pas[dp]  pas[dp] - pas[dp + 1]}
 else   {sp  sp + 1; 
-           pas[sp]  pas[sp] - pas[sp - 1]}
+           pas[sp]  pas[sp] - pas[sp - 1]}*/
+	   
+if bp == gp 
+{ dp <- dp - 1; 
+          pas[dp] <- pas[dp] - pas[dp + 1]}
+else {sp < sp + 1; 
+           pas[sp] <- pas[sp] - pas[sp - 1]}
+	   
 
 4	MUL		if bp == gp 
 then {dp  dp - 1; 
