@@ -249,17 +249,61 @@ int main(int argc, char *argv[]){
                 break;
             }
             break;
-        // LOD L, M
+              // LOD L, M
         case 3:
+            if (BP == GP){
+                DP++;
+                PAS[DP] = PAS[GP + IR[PC + 2]];
+            }
+            else {
+                if (base(IR[PC + 1]) == GP){
+                    SP--;
+                    PAS[SP] = PAS[GP + IR[PC + 2]];
+                }
+                else {
+                    SP--;
+                    PAS[SP] = PAS[base(IR[PC + 1]) - IR[PC + 2]];
+                }
+            }
+            PC += 3;
             break;
         // CAL L, M
         case 4:
+            if(BP == GP){
+                PAS[GP + IR[PC + 2]] = PAS[DP];
+                DP--;
+            }
+            else {
+                if (base(IR[PC + 1]) == GP){
+                    PAS[GP + IR[PC + 2]] = PAS[SP];
+                    SP++;
+                }
+                else {
+                    PAS[base(IR[PC + 1]) - IR[PC + 2]] = PAS[SP];
+                    SP++;
+                }
+            }
+            
             break;
         // INC 0, M
         case 5:
+            PAS[SP - 1] = IR[PC +1];
+            PAS[SP -2] = BP;
+            PAS[SP - 1] = PC;
+            BP = SP -1;
+            PC = IR[PC + 2];
             break;
         // INC 0, M
         case 6:
+
+        if(BP == GP){
+            DP = DP + IR[PC + 2];
+                
+        }
+        else{
+            SP = SP - IR[PC +2];
+        }
+            break;
             break;
         // JMP 0, M
         case 7:
