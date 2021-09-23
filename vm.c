@@ -304,27 +304,66 @@ int main(int argc, char *argv[]){
             SP = SP - IR[PC +2];
         }
             break;
-            break;
         // JMP 0, M
-        case 7:
+       case 7:
+        PC = IR[PC + 2];
             break;
         // JPC 0, M
         case 8:
+        if(BP == GP){
+            if(PAS[DP] == 0){
+                PC = IR[2];
+                DP--;
+            }
+            else{
+                PC += 3;
+            }
+        }
+        else{
+            if(PAS[SP] == 0){
+                PC = IR[2]
+                SP++;
+            }
+            else{
+                PC += 3;
+            }
+        }
             break;
         // SYS 0, #
         case 9:
-            switch (IR[PC + 2])
+            switch (PAS[2])
             {
             // Write the top stack element or data element or data element
             case 1:
+            if(BP == GP){
+                System.out.printf("%d", PAS[DP]);
+                D--;
+                else{
+                    System.outprintf("%d", PAS[SP]);
+                }
+            }
+            PC += 3;
                 break;
             // Read in input from the user and store it on top of the stack (or data section)
             case 2:
+            if(BP == GP){
+                DP++;
+                scanf("%d", PAS[DP]);
+                else{
+                    SP--;
+                    scanf("%d", PAS[SP]);
+                }
+            }
+            PC += 3;
                 break;
             // End of program
             case 3:
                 flag = 0;
                 break;
+            default:
+                break;
+            }
+            break;
             default:
                 break;
             }
