@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
         PAS[i] = 0;
     // Create file pointer
     FILE *fp;
-    //TODO read from command line and put values from input into PAS
+    // read from command line and put values from input into PAS
     // Open the File
     fp = fopen(argv[1], "r");
     // Used to catch errors in opening the file
@@ -68,29 +68,76 @@ int main(int argc, char *argv[]){
     int flag = 1; 
     // Use while loop with a switch case to determine the type of command
     while(flag){
-        switch (PAS[PC])
+        IR[PC] = PAS[PC];
+        IR[PC + 1] = PAS[PC + 1];
+        IR[PC + 2] = PAS[PC + 2];
+        switch (IR[PC])
         {
         // LIT 0, M
         case 1:
+            if (BP == GP){
+                DP++;
+                PAS[DP] = IR[PC + 2];
+            }
+            else {
+                SP--;
+                PAS[SP] = IR[PC + 2];
+            }
+            PC += 3;
             break;
         // OPR 0, # use another switch case to determine operation
         case 2:
-            switch (PAS[PC + 2])
+            switch (IR[PC + 2])
             {
             // RTN
             case 0:
+                SP = BP + 1;
+                BP = PAS[SP - 2];
+                PC = PAS[SP - 3];
                 break;
             // NEG
             case 1:
+                if (BP == GP)
+                    PAS[DP] = -1 * PAS[DP];
+                else
+                    PAS[SP] = -1 * PAS[SP];
+                PC += 3;
                 break;
             // ADD
             case 2:
+                if (BP == GP){
+                    DP--;
+                    PAS[DP] = PAS[DP] + PAS[DP + 1];
+                }
+                else {
+                    SP++;
+                    PAS[SP] = PAS[SP] + PAS[SP - 1];
+                }
+                PC += 3;
                 break;
             // SUB
             case 3:
+                if (BP == GP){
+                    DP--;
+                    PAS[DP] = PAS[DP] - PAS[DP + 1];
+                }
+                else {
+                    SP++;
+                    PAS[SP] = PAS[SP] - PAS[SP - 1];
+                }
+                PC += 3
                 break;
             // MUL
             case 4:
+                if (BP == GP){
+                    DP--;
+                    PAS[DP] = PAS[DP] * PAS[DP + 1];
+                }
+                else {
+                    SP++;
+                    PAS[SP] = PAS[SP] * PAS[SP - 1];
+                }
+                PC += 3;
                 break;
             // DIV
             case 5:
@@ -143,7 +190,7 @@ int main(int argc, char *argv[]){
             break;
         // SYS 0, #
         case 9:
-            switch (PAS[PC + 2])
+            switch (IR[PC + 2])
             {
             // Write the top stack element or data element or data element
             case 1:
