@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
                 PC += 3;
                 break;
             // DIV
-            case 5:
+           case 5:
             if(BP == GP){
                 DP--;
                 PAS[DP] = PAS[DP]/PAS[DP + 1];
@@ -149,6 +149,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP]/PAS[SP - 1];
             }
+            PC += 3;
                 break;
             // ODD
             case 6:
@@ -158,6 +159,7 @@ int main(int argc, char *argv[]){
             else{
                 PAS[SP] = PAS[SP] % 2;
             }
+            PC += 3;
                 break;
             // MOD
             case 7:
@@ -169,6 +171,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] % PAS[SP-1];
             }
+            PC += 3;
                 break;
             // EQL
             case 8:
@@ -180,6 +183,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] == PAS[SP - 1];
             }
+            PC += 3;
                 break;
             // NEQ
             case 9:
@@ -191,6 +195,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] != PAS[SP - 1];
             }
+            PC += 3;
                 break;
             // LSS
             case 10:
@@ -202,6 +207,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] < PAS[SP - 1];
             }
+            PC += 3;
                 break;
             // LEQ
             case 11:
@@ -213,6 +219,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] <= PAS[SP - 1];
             }
+            PC += 3;
                 break;
             // GTR
             case 12:
@@ -224,6 +231,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] > PAS[SP -1];
             }
+            PC += 3;
                 break;
             // GEQ
             case 13:
@@ -235,6 +243,7 @@ int main(int argc, char *argv[]){
                 SP++;
                 PAS[SP] = PAS[SP] >= PAS[SP - 1];
             }
+            PC += 3;
                 break;
             default:
                 break;
