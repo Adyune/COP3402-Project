@@ -68,26 +68,26 @@ int main(int argc, char *argv[]){
     int flag = 1; 
     // Use while loop with a switch case to determine the type of command
     while(flag){
-        IR[PC] = PAS[PC];
-        IR[PC + 1] = PAS[PC + 1];
-        IR[PC + 2] = PAS[PC + 2];
-        switch (IR[PC])
+        IR[0] = PAS[PC];
+        IR[1] = PAS[PC + 1];
+        IR[2] = PAS[PC + 2];
+        switch (IR[0])
         {
         // LIT 0, M
         case 1:
             if (BP == GP){
                 DP++;
-                PAS[DP] = IR[PC + 2];
+                PAS[DP] = IR[2];
             }
             else {
                 SP--;
-                PAS[SP] = IR[PC + 2];
+                PAS[SP] = IR[2];
             }
             PC += 3;
             break;
         // OPR 0, # use another switch case to determine operation
         case 2:
-            switch (IR[PC + 2])
+            switch (IR[2])
             {
             // RTN
             case 0:
@@ -253,16 +253,16 @@ int main(int argc, char *argv[]){
         case 3:
             if (BP == GP){
                 DP++;
-                PAS[DP] = PAS[GP + IR[PC + 2]];
+                PAS[DP] = PAS[GP + IR[2]];
             }
             else {
-                if (base(IR[PC + 1]) == GP){
+                if (base(IR[1]) == GP){
                     SP--;
-                    PAS[SP] = PAS[GP + IR[PC + 2]];
+                    PAS[SP] = PAS[GP + IR[2]];
                 }
                 else {
                     SP--;
-                    PAS[SP] = PAS[base(IR[PC + 1]) - IR[PC + 2]];
+                    PAS[SP] = PAS[base(IR[1]) - IR[2]];
                 }
             }
             PC += 3;
@@ -270,16 +270,16 @@ int main(int argc, char *argv[]){
         // CAL L, M
         case 4:
             if(BP == GP){
-                PAS[GP + IR[PC + 2]] = PAS[DP];
+                PAS[GP + IR[2]] = PAS[DP];
                 DP--;
             }
             else {
-                if (base(IR[PC + 1]) == GP){
-                    PAS[GP + IR[PC + 2]] = PAS[SP];
+                if (base(IR[1]) == GP){
+                    PAS[GP + IR[2]] = PAS[SP];
                     SP++;
                 }
                 else {
-                    PAS[base(IR[PC + 1]) - IR[PC + 2]] = PAS[SP];
+                    PAS[base(IR[1]) - IR[2]] = PAS[SP];
                     SP++;
                 }
             }
@@ -287,26 +287,26 @@ int main(int argc, char *argv[]){
             break;
         // INC 0, M
         case 5:
-            PAS[SP - 1] = IR[PC +1];
+            PAS[SP - 1] = IR[1];
             PAS[SP -2] = BP;
             PAS[SP - 1] = PC;
             BP = SP -1;
-            PC = IR[PC + 2];
+            PC = IR[2];
             break;
         // INC 0, M
         case 6:
 
         if(BP == GP){
-            DP = DP + IR[PC + 2];
+            DP = DP + IR[2];
                 
         }
         else{
-            SP = SP - IR[PC +2];
+            SP = SP - IR[2];
         }
             break;
         // JMP 0, M
        case 7:
-        PC = IR[PC + 2];
+        PC = IR[2];
             break;
         // JPC 0, M
         case 8:
