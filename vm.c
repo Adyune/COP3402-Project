@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
     GP = IC;
     DP = IC - 1;
     // FREE Can be allocated to any amount for this assignment
-    FREE = IC + 20; 
+    FREE = IC + 40; 
     BP = IC;
     PC = 0;
     SP = MAX_PAS_LENGTH;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
     printf("\t\tPC\tBP\tSP\tDP\tData\n");
     printf("Inital values:\t%d\t%d\t%d\t%d\n", PC, BP, SP, DP);
 
-    //TODO implement fetch & execute cycle
+    // fetch & execute cycle
     int flag = 1; 
     // Use while loop with a switch case to determine the type of command
     while(flag){
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] - PAS[SP - 1];
                 }
-                PC += 3
+                PC += 3;
                 break;
             // MUL
             case 4:
@@ -321,7 +321,7 @@ int main(int argc, char *argv[]){
         }
         else{
             if(PAS[SP] == 0){
-                PC = IR[2]
+                PC = IR[2];
                 SP++;
             }
             else{
@@ -333,14 +333,15 @@ int main(int argc, char *argv[]){
         case 9:
             switch (PAS[2])
             {
-            // Write the top stack element or data element or data element
+            // Write the top stack element or data element to screen
             case 1:
             if(BP == GP){
-                System.out.printf("%d", PAS[DP]);
-                D--;
-                else{
-                    System.outprintf("%d", PAS[SP]);
-                }
+                printf("%d", PAS[DP]);
+                DP--;
+            }
+            else{
+                printf("%d", PAS[SP]);
+                SP++;
             }
             PC += 3;
                 break;
@@ -349,10 +350,10 @@ int main(int argc, char *argv[]){
             if(BP == GP){
                 DP++;
                 scanf("%d", PAS[DP]);
-                else{
-                    SP--;
-                    scanf("%d", PAS[SP]);
-                }
+            }
+            else{
+                SP--;
+                scanf("%d", PAS[SP]);
             }
             PC += 3;
                 break;
@@ -360,10 +361,6 @@ int main(int argc, char *argv[]){
             case 3:
                 flag = 0;
                 break;
-            default:
-                break;
-            }
-            break;
             default:
                 break;
             }
@@ -386,7 +383,7 @@ int base(int L)
     }
     return arb;
 }
-
+// Line can be calulated using PC/3
 void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, int DP, int *pas, int GP)
 {
     int i;
