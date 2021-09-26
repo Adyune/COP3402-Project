@@ -291,7 +291,7 @@ int main(int argc, char *argv[]){
                     SP++;
                 }
             }
-            print_execution(line, "CAL", IR, PC, BP, SP, DP, PAS, GP);
+            print_execution(line, "STO", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // CAL 0, M
         case 5:
