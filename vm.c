@@ -295,9 +295,9 @@ int main(int argc, char *argv[]){
             break;
         // CAL 0, M
         case 5:
-            PAS[SP - 1] = IR[1];
-            PAS[SP -2] = BP;
-            PAS[SP - 1] = PC;
+            PAS[SP - 1] = base(IR[1]);  // Static Link
+            PAS[SP -2] = BP;            // Dynamic Link
+            PAS[SP - 3] = PC;           // Return Address
             BP = SP -1;
             PC = IR[2];
             print_execution(line, "CAL", IR, PC, BP, SP, DP, PAS, GP);
@@ -305,8 +305,7 @@ int main(int argc, char *argv[]){
         // INC 0, M
         case 6:
             if(BP == GP){
-                DP = DP + IR[2];
-                    
+                DP = DP + IR[2];  
             }
             else{
                 SP = SP - IR[2];
@@ -325,15 +324,11 @@ int main(int argc, char *argv[]){
                     PC = IR[2];
                     DP--;
                 }
-                else{
-                }
             }
             else{
                 if(PAS[SP] == 0){
                     PC = IR[2];
                     SP++;
-                }
-                else{
                 }
             }
             print_execution(line, "JPC", IR, PC, BP, SP, DP, PAS, GP);
@@ -345,11 +340,11 @@ int main(int argc, char *argv[]){
             // Write the top stack element or data element to screen
             case 1:
                 if(BP == GP){
-                    printf("Top of Stack Value: %d", PAS[DP]);
+                    printf("Top of Stack Value: %d\n", PAS[DP]);
                     DP--;
                 }
                 else{
-                    printf("Top of Stack Value: %d", PAS[SP]);
+                    printf("Top of Stack Value: %d\n", PAS[SP]);
                     SP++;
                 }
                 print_execution(line, "SYS", IR, PC, BP, SP, DP, PAS, GP);
