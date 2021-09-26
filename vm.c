@@ -61,16 +61,21 @@ int main(int argc, char *argv[]){
     SP = MAX_PAS_LENGTH;
 
     // Print the column headers to console
-    printf("\t\tPC\tBP\tSP\tDP\tData\n");
-    printf("Inital values:\t%d\t%d\t%d\t%d\n", PC, BP, SP, DP);
+    printf("\t\t\t\tPC\tBP\tSP\tDP\tData\n");
+    printf("Inital values:\t\t\t%d\t%d\t%d\t%d\n", PC, BP, SP, DP);
 
     // fetch & execute cycle
     int flag = 1; 
     // Use while loop with a switch case to determine the type of command
     while(flag){
+        if (PC > 1000)
+            exit(1);
+
+        int line = PC/3;
         IR[0] = PAS[PC];
         IR[1] = PAS[PC + 1];
         IR[2] = PAS[PC + 2];
+        PC += 3;
         switch (IR[0])
         {
         // LIT 0, M
@@ -83,8 +88,7 @@ int main(int argc, char *argv[]){
                 SP--;
                 PAS[SP] = IR[2];
             }
-            print_execution(PC/3, "LIT", IR, PC, BP, SP, DP, PAS, GP);
-            PC += 3;
+            print_execution(line, "LIT", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // OPR 0, # use another switch case to determine operation
         case 2:
@@ -94,8 +98,8 @@ int main(int argc, char *argv[]){
             case 0:
                 SP = BP + 1;
                 BP = PAS[SP - 2];
-                print_execution(PC/3, "RTN", IR, PC, BP, SP, DP, PAS, GP);
                 PC = PAS[SP - 3];
+                print_execution(line, "RTN", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // NEG
             case 1:
@@ -103,8 +107,7 @@ int main(int argc, char *argv[]){
                     PAS[DP] = -1 * PAS[DP];
                 else
                     PAS[SP] = -1 * PAS[SP];
-                print_execution(PC/3, "NEG", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "NEG", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // ADD
             case 2:
@@ -116,8 +119,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] + PAS[SP - 1];
                 }
-                print_execution(PC/3, "ADD", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "ADD", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // SUB
             case 3:
@@ -129,8 +131,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] - PAS[SP - 1];
                 }
-                print_execution(PC/3, "SUB", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "SUB", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // MUL
             case 4:
@@ -142,8 +143,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] * PAS[SP - 1];
                 }
-                print_execution(PC/3, "MUL", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "MUL", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // DIV
             case 5:
@@ -155,8 +155,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP]/PAS[SP - 1];
                 }
-                print_execution(PC/3, "DIV", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "DIV", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // ODD
             case 6:
@@ -166,8 +165,7 @@ int main(int argc, char *argv[]){
                 else{
                     PAS[SP] = PAS[SP] % 2;
                 }
-                print_execution(PC/3, "ODD", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "ODD", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // MOD
             case 7:
@@ -179,8 +177,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] % PAS[SP-1];
                 }
-                print_execution(PC/3, "MOD", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "MOD", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // EQL
             case 8:
@@ -192,8 +189,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] == PAS[SP - 1];
                 }
-                print_execution(PC/3, "EQL", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "EQL", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // NEQ
             case 9:
@@ -205,8 +201,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] != PAS[SP - 1];
                 }
-                print_execution(PC/3, "NEQ", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "NEQ", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // LSS
             case 10:
@@ -218,8 +213,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] < PAS[SP - 1];
                 }
-                print_execution(PC/3, "LSS", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "LSS", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // LEQ
             case 11:
@@ -231,8 +225,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] <= PAS[SP - 1];
                 }
-                print_execution(PC/3, "LEQ", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "LEQ", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // GTR
             case 12:
@@ -244,8 +237,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] > PAS[SP -1];
                 }
-                print_execution(PC/3, "GTR", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "GTR", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // GEQ
             case 13:
@@ -257,8 +249,7 @@ int main(int argc, char *argv[]){
                     SP++;
                     PAS[SP] = PAS[SP] >= PAS[SP - 1];
                 }
-                print_execution(PC/3, "GEQ", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "GEQ", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             default:
                 printf("ERROR OP");
@@ -282,8 +273,7 @@ int main(int argc, char *argv[]){
                     PAS[SP] = PAS[base(IR[1]) - IR[2]];
                 }
             }
-            print_execution(PC/3, "LOD", IR, PC, BP, SP, DP, PAS, GP);
-            PC += 3;
+            print_execution(line, "LOD", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // STO L, M
         case 4:
@@ -301,7 +291,7 @@ int main(int argc, char *argv[]){
                     SP++;
                 }
             }
-            print_execution(PC/3, "CAL", IR, PC, BP, SP, DP, PAS, GP);
+            print_execution(line, "CAL", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // CAL 0, M
         case 5:
@@ -309,8 +299,8 @@ int main(int argc, char *argv[]){
             PAS[SP -2] = BP;
             PAS[SP - 1] = PC;
             BP = SP -1;
-            print_execution(PC/3, "CAL", IR, PC, BP, SP, DP, PAS, GP);
             PC = IR[2];
+            print_execution(line, "CAL", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // INC 0, M
         case 6:
@@ -321,12 +311,12 @@ int main(int argc, char *argv[]){
             else{
                 SP = SP - IR[2];
             }
-            print_execution(PC/3, "INC", IR, PC, BP, SP, DP, PAS, GP);
+            print_execution(line, "INC", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // JMP 0, M
         case 7:
-            print_execution(PC/3, "JMP", IR, PC, BP, SP, DP, PAS, GP);
             PC = IR[2];
+            print_execution(line, "JMP", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // JPC 0, M
         case 8:
@@ -336,7 +326,6 @@ int main(int argc, char *argv[]){
                     DP--;
                 }
                 else{
-                    PC += 3;
                 }
             }
             else{
@@ -345,44 +334,43 @@ int main(int argc, char *argv[]){
                     SP++;
                 }
                 else{
-                    PC += 3;
                 }
             }
-            print_execution(PC/3, "JPC", IR, PC, BP, SP, DP, PAS, GP);
+            print_execution(line, "JPC", IR, PC, BP, SP, DP, PAS, GP);
             break;
         // SYS 0, #
         case 9:
-            switch (PAS[2])
+            switch (IR[2])
             {
             // Write the top stack element or data element to screen
             case 1:
                 if(BP == GP){
-                    printf("%d", PAS[DP]);
+                    printf("Top of Stack Value: %d", PAS[DP]);
                     DP--;
                 }
                 else{
-                    printf("%d", PAS[SP]);
+                    printf("Top of Stack Value: %d", PAS[SP]);
                     SP++;
                 }
-                print_execution(PC/3, "SYS", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "SYS", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // Read in input from the user and store it on top of the stack (or data section)
             case 2:
                 if(BP == GP){
                     DP++;
-                    scanf("%d", PAS[DP]);
+                    printf("Please Enter an Integer: ");
+                    scanf("%d", &PAS[DP]);
                 }
                 else{
                     SP--;
-                    scanf("%d", PAS[SP]);
+                    printf("Please Enter an Integer: ");
+                    scanf("%d", &PAS[SP]);
                 }
-                print_execution(PC/3, "SYS", IR, PC, BP, SP, DP, PAS, GP);
-                PC += 3;
+                print_execution(line, "SYS", IR, PC, BP, SP, DP, PAS, GP);
                 break;
             // End of program
             case 3:
-                print_execution(PC/3, "SYS", IR, PC, BP, SP, DP, PAS, GP);
+                print_execution(line, "SYS", IR, PC, BP, SP, DP, PAS, GP);
                 flag = 0;
                 break;
             default:
@@ -411,7 +399,6 @@ int base(int L)
     }
     return arb;
 }
-// Line can be calulated using PC/3
 void print_execution(int line, char *opname, int *IR, int PC, int BP, int SP, int DP, int *pas, int GP)
 {
     int i;
