@@ -29,7 +29,7 @@ void printtokens();
 lexeme *lexanalyzer(char *input)
 {
 	list = malloc(sizeof(lexeme) * MAX_NUMBER_TOKENS);
-	int i = 0, j = 0, counter = 0;
+	int i = 0, j = 0, counter = 0, lex_index = 0;
 	char * string = malloc(sizeof(char) * MAX_IDENT_LEN + 1);
 	lexeme token;
 	// TODO: implement var, restricted, and operators/symbols
@@ -42,23 +42,108 @@ lexeme *lexanalyzer(char *input)
 		if(isdigit(input[i])){
 			while(input[i] != '\0'){
 				// Invalid Identifier
-				if (isletter(input[i]))
+				if (isalpha(input[i])){
 					printlexerror(2);
+					exit(1);
+				}
 				// Excessive number length
-				else if (j > MAX_NUMBER_LEN)
+				else if (j > MAX_NUMBER_LEN){
 					printlexerror(3);
+					exit(1);
+				}
 				// Implement helper function so this doesnt look gross?
-				else if (iscntrl(input[i]) || !isdigit(input[i]))
+				else if (iscntrl(input[i]) || !isdigit(input[i]) || input[i] != '\0')
 				{
 					token.value = atoi(string);
 					token.type = numbersym;
-					i++;
+					list[lex_index] = token;
+					lex_index++;
+					if (iscntrl(input[i])){
+						i++;
+					}
 					j = 0;
+					break;
 				} else {
 					string[j] = input[i];
 					i++, j++;
 				}
-			}	
+			}
+			continue;
+		}
+		// Case where the input starts with a letter and determines if it is a variable, procedure or a reserved word
+		else if (isalpha(input[i])){
+			while(input[i] != '\0'){
+				if(j > MAX_IDENT_LEN){
+					printlexerror(4);
+					exit(1);
+				}
+				else if (!isalpha(input[i]) || !isdigit(input[i]) || iscntrl(input[i])){
+					// Check if the string is a reserved word
+					if (strcmp(string, "const") == 0){
+
+					}
+					else if (strcmp(string, "var") == 0){
+
+					}
+					else if (strcmp(string, "procedure") == 0){
+
+					}
+					else if (strcmp(string, "call") == 0){
+
+					}
+					else if (strcmp(string, "if") == 0){
+
+					}
+					else if (strcmp(string, "then") == 0){
+
+					}
+					else if (strcmp(string, "else") == 0){
+
+					}
+					else if (strcmp(string, "while") == 0){
+
+					}
+					else if (strcmp(string, "do") == 0){
+
+					}
+					else if (strcmp(string, "begin") == 0){
+
+					}
+					else if (strcmp(string, "end") == 0){
+
+					}
+					else if (strcmp(string, "read") == 0){
+
+					}
+					else if (strcmp(string, "write") == 0){
+
+					}
+					else if (strcmp(string, "odd") == 0){
+
+					}
+					// If it's not a reserved word then it is a identifer 
+					else {
+						strcpy(token.name, string);
+						token.type = identsym;
+						list[lex_index] = token;
+						lex_index++;
+						if (iscntrl(input[i])){
+							i++;
+						}
+						j = 0;
+						break;
+					}
+				}
+				else{
+					string[j] = input[i];
+					i++, j++;
+				}
+			}
+			continue;
+		}
+		// Checks for operators
+		else {
+			
 		}
 	}
 	free(string);
