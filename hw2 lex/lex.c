@@ -145,7 +145,7 @@ lexeme *lexanalyzer(char *input)
 		else {
 			while (input[i] != "\0") {
 				//check for all the operators except for =, <, >, !, and :
-				if (input[i] == '*' || input[i] == '%' || input[i] == '*' || input[i] == '/' || input[i] == '+' || 
+				if (input[i] == '*' || input[i] == '%' || input[i] == '/' || input[i] == '+' || 
 					input[i] == '-' || input[i] == '(' || input[i] == ')' || input[i] == ',' || input[i] == '.' ||
 					input[i] == ';') {
 						string[j] = input[i];
