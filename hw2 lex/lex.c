@@ -29,12 +29,12 @@ void printtokens();
 lexeme *lexanalyzer(char *input)
 {
 	list = malloc(sizeof(lexeme) * MAX_NUMBER_TOKENS);
-	int i = 0, j = 0, counter = 0, lex_index = 0;
+	int i = 0, j = 0, lex_index = 0;
 	char * string = malloc(sizeof(char) * MAX_IDENT_LEN + 1);
 	lexeme token;
 	// TODO: implement var, restricted, and operators/symbols
 	while(input[i] != '\0'){
-		if (iscntrl(input[i])){
+		if (iscntrl(input[i]) || input[i] == " "){
 			i++;
 			continue;
 		}
@@ -52,13 +52,13 @@ lexeme *lexanalyzer(char *input)
 					exit(1);
 				}
 				// Implement helper function so this doesnt look gross?
-				else if (iscntrl(input[i]) || !isdigit(input[i]) || input[i] != '\0')
+				else if (iscntrl(input[i]) || input[i] == " " || !isdigit(input[i]) || input[i] != '\0')
 				{
 					token.value = atoi(string);
 					token.type = numbersym;
 					list[lex_index] = token;
 					lex_index++;
-					if (iscntrl(input[i])){
+					if (iscntrl(input[i]) || input[i] == " "){
 						i++;
 					}
 					j = 0;
@@ -77,7 +77,7 @@ lexeme *lexanalyzer(char *input)
 					printlexerror(4);
 					exit(1);
 				}
-				else if (!isalpha(input[i]) || !isdigit(input[i]) || iscntrl(input[i])){
+				else if (!isalpha(input[i]) || !isdigit(input[i]) || iscntrl(input[i]) || input[i] == " "){
 					// Check if the string is a reserved word
 					if (strcmp(string, "const") == 0){
 
@@ -127,7 +127,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = identsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i])){
+						if (iscntrl(input[i]) || input[i] == " "){
 							i++;
 						}
 						j = 0;
@@ -143,6 +143,49 @@ lexeme *lexanalyzer(char *input)
 		}
 		// Checks for operators
 		else {
+			while (input[i] != "\0") {
+				//check for all the operators except for =, <, >, !, and :
+				if (input[i] == '*' || input[i] == '%' || input[i] == '*' || input[i] == '/' || input[i] == '+' || 
+					input[i] == '-' || input[i] == '(' || input[i] == ')' || input[i] == ',' || input[i] == '.' ||
+					input[i] == ';') {
+						string[j] = input[i];
+						i++, j++;
+				} 
+				//dedicated if block for < and >, since they might be part of <= or >=
+				else if (input[i] == '<' || input[i] == '>') {
+					//check to see if the following character is '='
+					if (input[i + 1] == '=') {
+						string[j++] = input[i++]; //set string[j] to '<' or '>'. then increment j and i
+						string[j++] = input[i++]; // j and i are incremented. set string[j] to '='. incremement j and i
+					}
+					//the following character is not an '='
+					else {
+						string[j] = input[i];
+						i++, j++;
+					}
+				}
+				// '!' and ':' by themselves are not valid operators. they must always be followed by '='
+				// this block checks to see if that is the case
+				else if (input[i] == '!' || input[i] == ":") {
+					//check to see if the following character is '='
+					if (input[i + 1] == '=') {
+						string[j++] = input[i++]; //set string[j] to '!' or ':'. then increment j and i
+						string[j++] = input[i++]; // j and i are incremented. set string[j] to '='. incremement j and i
+					}
+					//the following character is not an '='
+					else {
+						//invalid symbol
+						printlexerror(1);
+						exit(1);
+					}
+				}
+				//invalid symbol
+				else {
+					printlexerror(1);
+					exit(1);
+				}
+
+			}
 			
 		}
 	}
