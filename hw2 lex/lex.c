@@ -19,7 +19,7 @@
 #define MAX_IDENT_LEN 11
 #define MAX_NUMBER_LEN 5
 
-lexeme *list;
+int lexeme *list; // (double check this but I think here were were missing calling this an integer)
 int lex_index;
 
 void printlexerror(int type);
