@@ -31,17 +31,22 @@ lexeme *lexanalyzer(char *input)
 {
 	list = malloc(sizeof(lexeme) * MAX_NUMBER_TOKENS);
 	int i = 0, j = 0, lex_index = 0;
-	char * string = malloc(sizeof(char) * MAX_IDENT_LEN + 1);
+	// init like this to prevent garbage values
+	char string[MAX_IDENT_LEN] = {0};
+	// declare and initialize the token
 	lexeme token;
-	// TODO: implement var, restricted, and operators/symbols
+	token.value = -1;
+	token.type = constsym;
+	strcpy(token.name, "");
 	while(input[i] != '\0'){
-		if (iscntrl(input[i]) || input[i] == " "){
+		if (iscntrl(input[i]) || input[i] == ' '){
 			i++;
 			continue;
 		}
 		// If the character starts with a number 
 		if(isdigit(input[i])){
 			while(input[i] != '\0'){
+				
 				// Invalid Identifier
 				if (isalpha(input[i])){
 					printlexerror(2);
@@ -53,25 +58,22 @@ lexeme *lexanalyzer(char *input)
 					exit(1);
 				}
 				// Checks if the next input is whitespace or an operator
-				else if (iscntrl(input[i]) || input[i] == " " || !isdigit(input[i]) || input[i] != '\0')
+				else if (!isdigit(input[i]) || input[i + 1] == '\0')
 				{
 					token.value = atoi(string);
 					token.type = numbersym;
 					list[lex_index] = token;
 					lex_index++;
-					if (iscntrl(input[i]) || input[i] == " "){
-						i++;
-					}
+					//printf("%d ", lex_index);
 					j = 0;
 					// reset token value for the next token
 					token.value = 0;
 					break;
-				} else {
-					string[j] = input[i];
-					i++, j++;
 				}
+				string[j] = input[i];
+				//printf("%s ", string);
+				i++, j++;
 			}
-			continue;
 		}
 		// Case where the input starts with a letter and determines if it is a variable, procedure or a reserved word
 		else if (isalpha(input[i])){
@@ -80,16 +82,14 @@ lexeme *lexanalyzer(char *input)
 					printlexerror(4);
 					exit(1);
 				}
-				else if (!isalpha(input[i]) || !isdigit(input[i]) || iscntrl(input[i]) || input[i] == " "){
+				else if (!isalpha(input[i]) || !isdigit(input[i]) || input[i] == '\0'){
 					// Check if the string is a reserved word
 					if (strcmp(string, "const") == 0){
 						strcpy(token.name, "const\0");
 						token.type = constsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -100,9 +100,6 @@ lexeme *lexanalyzer(char *input)
 						token.type = varsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -113,9 +110,6 @@ lexeme *lexanalyzer(char *input)
 						token.type = procsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -126,9 +120,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = callsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -139,9 +131,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = ifsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -152,9 +142,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = thensym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -165,9 +153,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = elsesym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -178,9 +164,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = whilesym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -191,9 +175,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = dosym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -204,9 +186,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = beginsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -217,9 +197,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = endsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -230,9 +208,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = readsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -243,9 +219,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = writesym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -256,9 +230,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = oddsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name for the next token
 						strcpy(token.name, "");
 						j = 0;
@@ -270,9 +242,7 @@ lexeme *lexanalyzer(char *input)
 						token.type = identsym;
 						list[lex_index] = token;
 						lex_index++;
-						if (iscntrl(input[i]) || input[i] == " "){
-							i++;
-						}
+						
 						// Reset the name of the token
 						strcpy(token.name, "");
 						j = 0;
@@ -284,16 +254,16 @@ lexeme *lexanalyzer(char *input)
 					i++, j++;
 				}
 			}
-			continue;
 		}
 		// Checks for operators
 		else {
-			while (input[i] != "\0") {
+			while (input[i] != '\0') {
 				//check for all the operators except for =, <, >, !, and :
 				if(input[i] == '+'){
 					strcpy(token.name, "+\0");
 					token.type = addsym;
 					list[lex_index] = token;
+					printf("%d ", list[lex_index].type);
 					lex_index++;
 					// Reset the name of the token
 					strcpy(token.name, "");
@@ -458,7 +428,7 @@ lexeme *lexanalyzer(char *input)
 						exit(1);
 					}
 				}
-				else if(input[i] == ":"){
+				else if(input[i] == ':'){
 					//check to see if the following character is '='
 					if (input[i + 1] == '=') {
 						strcpy(token.name, ":=\0");
@@ -477,7 +447,7 @@ lexeme *lexanalyzer(char *input)
 						exit(1);
 					}
 				}
-				else if(input[i] == "="){
+				else if(input[i] == '='){
 					//check to see if the following character is '='
 					if (input[i + 1] == '=') {
 						strcpy(token.name, "==\0");
@@ -505,7 +475,6 @@ lexeme *lexanalyzer(char *input)
 			
 		}
 	}
-	free(string);
 	printtokens();
 	return list;
 }
