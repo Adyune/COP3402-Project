@@ -275,6 +275,7 @@ lexeme *lexanalyzer(char *input)
 		}
 	} 
 	printtokens();
+	free(list);
 }
 
 
