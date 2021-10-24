@@ -4,6 +4,8 @@
 	You may add as many constants, global variables, and support functions
 	as you desire.
 	
+	Members: Adam Lei, Joseph Ratchford, Ra'id Naeem, Suhaib Hasan
+
 	If you choose to alter the printing functions or delete list or lex_index, 
 	you MUST make a note of that in you readme file, otherwise you will lose 
 	5 points.
@@ -84,7 +86,7 @@ lexeme *lexanalyzer(char *input)
 				else {
 					// If the operator is noot found, error and exit
 					printlexerror(1);
-					exit(1);
+					exit(0);
 				}
 			}
 			// Addition
@@ -204,7 +206,7 @@ lexeme *lexanalyzer(char *input)
 			// Error if the symbol is not recognized 
 			else {
 				printlexerror(1);
-				exit(1);
+				exit(0);
 			}
 		}
 		else if (isdigit(input[i])){
@@ -214,12 +216,12 @@ lexeme *lexanalyzer(char *input)
 				// Invalid Identifier
 				if (isalpha(input[i])){
 					printlexerror(2);
-					exit(1);
+					exit(0);
 				}
 				// Excessive number length
 				else if (j > MAX_NUMBER_LEN){
 					printlexerror(3);
-					exit(1);
+					exit(0);
 				}
 				else if(!isdigit(input[i])){
 					token.value = atoi(string);
@@ -240,7 +242,7 @@ lexeme *lexanalyzer(char *input)
 				i++, j++;
 				if(j > MAX_IDENT_LEN){
 					printlexerror(4);
-					exit(1);
+					exit(0);
 				}
 				else if (!isalpha(input[i]) && !isdigit(input[i])){
 					int isReserved = 0;
