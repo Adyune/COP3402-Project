@@ -1,3 +1,5 @@
+
+// Pseudo Code 
 PROGRAM
 emit JMP 
 add to symbol table (kind 3, “main”, 0, level = 0, 0, unmarked)
