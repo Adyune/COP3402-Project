@@ -1,5 +1,0 @@
-var x;
-procedure alpha;;
-begin
-	x := 14 * alpha + (51 % 7);;
-end.
