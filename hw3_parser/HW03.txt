@@ -129,7 +129,7 @@ STATEMENT
         jpcIdx = current code index
         emit JPC
         if token != thensym
-        error
+            error
         get next token
         STATEMENT
         if token == elsesym

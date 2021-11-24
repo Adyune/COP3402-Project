@@ -195,19 +195,171 @@ void statement(lexeme *list){
 		int symidx = findSymbol(list[tokenCtr], 2);
 		if (symidx == -1){
 			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 3)){
-				printparseerror(90);
+				printparseerror(6);
 				exit(0);
 			} else {
 				printparseerror(19);
 				exit(0);
 			}
 		}
+		tokenCtr++;
+		if (list[tokenCtr].type != assignsym){
+			printparseerror(5);
+			exit(0);
+		}
+		expression(list);
+		emit(4, level - table[symidx].level, table[symidx].addr);
+		return;
+	}
+	if (list[tokenCtr].type == beginsym){
+		do{
+			tokenCtr++;
+			statement(list);
+		} while (list[tokenCtr].type == semicolonsym);
+		if (list[tokenCtr].type != endsym){
+			if (list[tokenCtr].type == identsym || list[tokenCtr].type == beginsym ||
+				list[tokenCtr].type == ifsym || list[tokenCtr].type == whilesym ||
+				list[tokenCtr].type == readsym || list[tokenCtr].type == writesym ||
+				list[tokenCtr].type == callsym)
+			{
+				printparseerror(15);
+				exit(0);
+			}
+			else{
+				printparseerror(16);
+				exit(0);
+			}
+		}
+		tokenCtr++;
+		return;
+	}
+	if (list[tokenCtr].type == ifsym){
+		tokenCtr++;
+		condition(list);
+		int jpcIdx = cIndex;
+		emit(8, level, jpcIdx);
+		if (list[tokenCtr].type != thensym){
+			printparseerror(8);
+			exit(0);
+		}
+		tokenCtr++;
+		statement(list);
+		if (list[tokenCtr].type == elsesym){
+			int jmpidx = cIndex;
+			emit(7, level, jmpidx);
+			code[jpcIdx].m = cIndex * 3;
+			statement(list);
+			code[jmpidx].m = cIndex * 3;
+		}
+		else {
+			code[jpcIdx].m = cIndex * 3;
+		}
+		return;
+	}
+	if (list[tokenCtr].type == whilesym){
+		tokenCtr++;
+		int loopidx = cIndex;
+		condition(list);
+		if (list[tokenCtr].type != dosym){
+			printparseerror(9);
+			exit(0);
+		}
+		tokenCtr++;
+		int jpcidx = cIndex;
+		emit(8, level, jpcidx);
+		statement(list);
+		emit (7, level, loopidx * 3);
+		code[jpcidx].m = cIndex * 3;
+		return;
+	}
+	if (list[tokenCtr].type == readsym){
+		tokenCtr++;
+		if (list[tokenCtr].type != identsym){
+			printparseerror(6);
+			exit(0);
+		}
+		int symidx = findSymbol(list[tokenCtr], 2);
+		if (symidx == -1){
+			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 3)){
+				printparseerror(6);
+				exit(0);
+			} else {
+				printparseerror(19);
+				exit(0);
+			}
+		}
+		tokenCtr++;
+		emit(9, level, 2);
+		emit(4, level - table[symidx].level, table[symidx].addr);
+		return;
+	}
 
+	if (list[tokenCtr].type == writesym){
+		tokenCtr++;
+		expression(list);
+		emit (9, level, 1);
+		return;
+	}
+	if (list[tokenCtr].type == callsym){
+		tokenCtr++;
+		int symidx = findSymbol(list[tokenCtr], 3);
+		if (symidx == -1){
+			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 2)){
+				printparseerror(7);
+				exit(0);
+			} else {
+				printparseerror(19);
+				exit(0);
+			}
+		}
+		tokenCtr++;
+		emit (5, level - table[symidx].level, symidx);
 	}
 }
 
 void condition(lexeme *list){
-	
+	if (list[tokenCtr].type == oddsym){
+		tokenCtr++;
+		expression(list);
+		emit(2, level, 6);
+	}
+	else {
+		expression(list);
+		if (list[tokenCtr].type == eqlsym){
+			tokenCtr++;
+			expression(list);
+			emit(2, level, 8);
+		}
+		else if (list[tokenCtr].type == neqsym){
+			tokenCtr++;
+			expression(list);
+			emit(2, level, 9);
+		}
+		else if (list[tokenCtr].type == lsssym){
+			tokenCtr++;
+			expression(list);
+			emit(2, level, 10);
+		}
+		else if (list[tokenCtr].type == leqsym){
+			tokenCtr++;
+			expression(list);
+			emit(2, level, 11);
+		}
+		else if (list[tokenCtr].type == gtrsym){
+			tokenCtr++;
+			expression(list);
+			emit(2, level, 12);
+		}
+		else if (list[tokenCtr].type == geqsym){
+			tokenCtr++;
+			expression(list);
+			emit(2, level, 13);
+		}
+		else {
+			printparseerror(10);
+			exit(0);
+		}
+	}
 }
 
 void expression(lexeme *list){
