@@ -41,17 +41,17 @@ CONST-DECLARATION
             if token != assignsym
                 error
             get next token
-        if token != numbersym
-            error
-        add to symbol table (kind 1, saved name, number, level, 0, unmarked)
-        get next token
-    while token == commasym
-        if token != semicolonsym
-            if token == identsym
+            if token != numbersym
                 error
-            else
-                error
-        get next token
+            add to symbol table (kind 1, saved name, number, level, 0, unmarked)
+            get next token
+        while token == commasym
+            if token != semicolonsym
+                if token == identsym
+                    error
+                else
+                    error
+            get next token
 
 VAR-DECLARATION
     numVars = 0

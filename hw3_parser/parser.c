@@ -11,6 +11,9 @@ int cIndex;
 symbol *table;
 int tIndex;
 int level;
+// Tracks tokens
+int tokenCtr = 0;
+
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
@@ -18,17 +21,17 @@ void printsymboltable();
 void printassemblycode();
 
 // These are the functions we need to implement
-void program(lexeme *list, int printTable, int printCode);
-void block(lexeme *list, int printTable, int printCode);
-void constDeclaration(lexeme *list, int printTable, int printCode);
-int varDeclaration(lexeme *list, int printTable, int printCode);
-void procedureDeclaration(lexeme *list, int printTable, int printCode);
-void statement(lexeme *list, int printTable, int printCode);
-void condition(lexeme *list, int printTable, int printCode);
-void expression(lexeme *list, int printTable, int printCode);
-void term(lexeme *list, int printTable, int printCode);
-void factor(lexeme *list, int printTable, int printCode);
-int multipleDeclarationCheck();
+void program(lexeme *list);
+void block(lexeme *list);
+void constDeclaration(lexeme *list);
+int varDeclaration(lexeme *list);
+void procedureDeclaration(lexeme *list);
+void statement(lexeme *list);
+void condition(lexeme *list);
+void expression(lexeme *list);
+void term(lexeme *list);
+void factor(lexeme *list);
+int multipleDeclarationCheck(lexeme token);
 void findSymbol();
 void mark();
 
@@ -45,16 +48,17 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	return code;
 }
 
-void program(lexeme *list, int printTable, int printCode){
+void program(lexeme *list){
 	// Emit JMP to main
 	emit(7, 0, 3);
 	addToSymbolTable(3, "main", 0, 0, 0, 0);
 	level = -1;
-	block(list, printTable, printCode);
+	block(list);
 		// Error if last token is not a period
-		/*if (list[].type != periodsym)
+		if (list[tokenCtr].type != periodsym){
 			printparseerror(1);
-			*/
+			exit(0);
+		}	
 		// Emit Halt
 		emit(9, 0, 3);
 		for (int i = 0; i < (sizeof(code)/ sizeof(code[0])); i++){
@@ -65,27 +69,66 @@ void program(lexeme *list, int printTable, int printCode){
 		code[0].m = table[0].addr;
 }
 
-void block(lexeme *list, int printTable, int printCode){
+void block(lexeme *list){
 	level++;
 	int procedure_idx = tIndex - 1;
-	constDeclaration(list, printTable, printCode);
-	int x = varDeclaration(list, printTable, printCode);
-	procedureDeclaration(list, printTable, printCode);
+	constDeclaration(list);
+	int x = varDeclaration(list);
+	procedureDeclaration(list);
 	table[procedure_idx].addr = cIndex * 3;
 	if (level == 0)
 		emit(6, level, x);
 	else	
 		emit(6, level, x + 3);
-	statement(list, printTable, printCode);
+	statement(list);
 	mark();
 	level--;
 }
 
-void term(lexeme *list, int printTable, int printCode){
+void constDeclaration(lexeme *list){
+	if (list[tokenCtr].type == constsym){
+		do {
+			tokenCtr++;
+			if (list[tokenCtr].type != identsym){
+				printparseerror(2);
+				exit(0);
+			}
+			int symidx = multipleDeclarationCheck(list[tokenCtr]);
+			if (symidx != -1){
+				printparseerror(18);
+				exit(0);
+			}
+			char name[12] = list[tokenCtr].name;
+			tokenCtr++;
+			if (list[tokenCtr].type != assignsym){
+				printparseerror(2);
+				exit(0);
+			}
+			tokenCtr++;
+			if (list[tokenCtr].type != numbersym){
+				printparseerror(2);
+				exit(0);
+			}
+			addToSymbolTable(1, name, list[tokenCtr].value, level, 0, 0);
+			tokenCtr;
+		} while (list[tokenCtr].type == commasym);
+		if (list[tokenCtr].type != semicolonsym){
+			if (list[tokenCtr].type == identsym){
+				printparseerror(13);
+				exit(0);
+			} else {
+				printparseerror(14);
+				exit(0);
+			}
+		}
+	}
+}
+
+void term(lexeme *list){
 
 }
 
-void factor(lexeme *list, int printTable, int printCode){
+void factor(lexeme *list){
 	if (1){
 
 	}
