@@ -17,6 +17,21 @@ void printparseerror(int err_code);
 void printsymboltable();
 void printassemblycode();
 
+// These are the functions we need to implement
+void program();
+void block();
+void constDeclaration();
+int varDeclaration();
+void procedureDeclaration();
+void statement();
+void condition();
+void expression();
+void term();
+void factor();
+int multipleDeclarationCheck();
+void findSymbol();
+void mark();
+
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
 	code = NULL;
