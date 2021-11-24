@@ -10,7 +10,7 @@ instruction *code;
 int cIndex;
 symbol *table;
 int tIndex;
-
+int level;
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
 void printparseerror(int err_code);
@@ -18,16 +18,16 @@ void printsymboltable();
 void printassemblycode();
 
 // These are the functions we need to implement
-void program();
-void block();
-void constDeclaration();
-int varDeclaration();
-void procedureDeclaration();
-void statement();
-void condition();
-void expression();
-void term();
-void factor();
+void program(lexeme *list, int printTable, int printCode);
+void block(lexeme *list, int printTable, int printCode);
+void constDeclaration(lexeme *list, int printTable, int printCode);
+int varDeclaration(lexeme *list, int printTable, int printCode);
+void procedureDeclaration(lexeme *list, int printTable, int printCode);
+void statement(lexeme *list, int printTable, int printCode);
+void condition(lexeme *list, int printTable, int printCode);
+void expression(lexeme *list, int printTable, int printCode);
+void term(lexeme *list, int printTable, int printCode);
+void factor(lexeme *list, int printTable, int printCode);
 int multipleDeclarationCheck();
 void findSymbol();
 void mark();
@@ -35,6 +35,7 @@ void mark();
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
 	code = NULL;
+	
 	/* this line is EXTREMELY IMPORTANT, you MUST uncomment it
 		when you test your code otherwise IT WILL SEGFAULT in 
 		vm.o THIS LINE IS HOW THE VM KNOWS WHERE THE CODE ENDS
@@ -44,6 +45,51 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	return code;
 }
 
+void program(lexeme *list, int printTable, int printCode){
+	// Emit JMP to main
+	emit(7, 0, 3);
+	addToSymbolTable(3, "main", 0, 0, 0, 0);
+	level = -1;
+	block(list, printTable, printCode);
+		// Error if last token is not a period
+		/*if (list[].type != periodsym)
+			printparseerror(1);
+			*/
+		// Emit Halt
+		emit(9, 0, 3);
+		for (int i = 0; i < (sizeof(code)/ sizeof(code[0])); i++){
+			if (code[i].opcode == 5){
+				code[i].m = table[code[i].m].addr;
+			}
+		}
+		code[0].m = table[0].addr;
+}
+
+void block(lexeme *list, int printTable, int printCode){
+	level++;
+	int procedure_idx = tIndex - 1;
+	constDeclaration(list, printTable, printCode);
+	int x = varDeclaration(list, printTable, printCode);
+	procedureDeclaration(list, printTable, printCode);
+	table[procedure_idx].addr = cIndex * 3;
+	if (level == 0)
+		emit(6, level, x);
+	else	
+		emit(6, level, x + 3);
+	statement(list, printTable, printCode);
+	mark();
+	level--;
+}
+
+void term(lexeme *list, int printTable, int printCode){
+
+}
+
+void factor(lexeme *list, int printTable, int printCode){
+	if (1){
+
+	}
+}
 
 void emit(int opname, int level, int mvalue)
 {
