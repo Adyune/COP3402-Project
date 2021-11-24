@@ -32,7 +32,7 @@ void expression(lexeme *list);
 void term(lexeme *list);
 void factor(lexeme *list);
 int multipleDeclarationCheck(lexeme token);
-void findSymbol();
+int findSymbol(lexeme token, int type);
 void mark();
 
 instruction *parse(lexeme *list, int printTable, int printCode)
@@ -121,9 +121,98 @@ void constDeclaration(lexeme *list){
 				exit(0);
 			}
 		}
+		tokenCtr++;
 	}
 }
 
+int varDeclaration(lexeme *list){
+	int numVars = 0;
+	if (list[tokenCtr].type != varsym){
+		do {
+			numVars++;
+			tokenCtr++;
+			if (list[tokenCtr].type != identsym){
+				printparseerror(3);
+				exit(0);
+			}
+			int symidx = multipleDeclarationCheck(list[tokenCtr]);
+			if (symidx != -1){
+				printparseerror(18);
+				exit(0);
+			}
+			if (level == 0)
+				addToSymbolTable(2, list[tokenCtr].name, 0, level, numVars - 1, 0);
+			else
+				addToSymbolTable(2, list[tokenCtr].name, 0, level, numVars + 2, 0);
+			tokenCtr++;
+		} while (list[tokenCtr].type == commasym);
+		if (list[tokenCtr].type != semicolonsym){
+			if (list[tokenCtr].type == identsym){
+				printparseerror(13);
+				exit(0);
+			} else {
+				printparseerror(14);
+				exit(0);
+			}
+		}
+		tokenCtr++;
+	}
+	return numVars;
+}
+
+void procedureDeclaration(lexeme *list){
+	while (list[tokenCtr].type == procsym){
+		tokenCtr++;
+		if (list[tokenCtr].type != identsym){
+			printparseerror(4);
+			exit(0);
+		}
+		int symidx = multipleDeclarationCheck(list[tokenCtr]);
+		if (symidx != -1){
+			printparseerror(18);
+			exit(0);
+		}
+		addToSymbolTable(3, list[tokenCtr].name, 0, level, 0, 0);
+		tokenCtr++;
+		if (list[tokenCtr].type != semicolonsym){
+			printparseerror(4);
+			exit(0);
+		}
+		tokenCtr++;
+		block(list);
+		if (list[tokenCtr].type != semicolonsym){
+			printparseerror(14);
+			exit(0);
+		}
+		tokenCtr++;
+		// Emit return
+		emit(2, level, 0);
+	}
+}
+
+void statement(lexeme *list){
+	if (list[tokenCtr].type == identsym){
+		int symidx = findSymbol(list[tokenCtr], 2);
+		if (symidx == -1){
+			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 3)){
+				printparseerror(90);
+				exit(0);
+			} else {
+				printparseerror(19);
+				exit(0);
+			}
+		}
+
+	}
+}
+
+void condition(lexeme *list){
+	
+}
+
+void expression(lexeme *list){
+
+}
 void term(lexeme *list){
 
 }

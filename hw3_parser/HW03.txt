@@ -46,12 +46,12 @@ CONST-DECLARATION
             add to symbol table (kind 1, saved name, number, level, 0, unmarked)
             get next token
         while token == commasym
-            if token != semicolonsym
-                if token == identsym
-                    error
-                else
-                    error
-            get next token
+        if token != semicolonsym
+            if token == identsym
+                error
+            else
+                error
+        get next token
 
 VAR-DECLARATION
     numVars = 0
@@ -70,13 +70,13 @@ VAR-DECLARATION
                 add to symbol table (kind 2, ident, 0, level, numVars+2, unmarked)
             get next token
         while token == commasym
-            if token != semicolonsym
-                if token == identsym
-                    error
-                else
-                    error
-            get next token
-        return numVars
+        if token != semicolonsym
+            if token == identsym
+                error
+            else
+                error
+        get next token
+    return numVars
 
 PROCEDURE-DECLARATION
     while token == procsym
@@ -168,21 +168,21 @@ STATEMENT
         emit READ
         emit STO (L = level – table[symIdx].level, M = table[symIdx].addr)
         return
-if token == writesym
-    get next token
-    EXPRESSION
-    emit WRITE
-    return
-if token == callsym
-    get next token
-    symIdx = FINDSYMBOL (token, kind 3)
-    if symIdx == -1
-        if FINDSYMBOL (token, 1) != FINDSYMBOL(token, 2)
-            error
-        else
-            error
-    get next token
-    emit CAL (L = level – table[symIdx].level, symIdx)
+    if token == writesym
+        get next token
+        EXPRESSION
+        emit WRITE
+        return
+    if token == callsym
+        get next token
+        symIdx = FINDSYMBOL (token, kind 3)
+        if symIdx == -1
+            if FINDSYMBOL (token, 1) != FINDSYMBOL(token, 2)
+                error
+            else
+                error
+        get next token
+        emit CAL (L = level – table[symIdx].level, symIdx)
 
 CONDITION
     if token == oddsym
