@@ -38,14 +38,18 @@ void mark();
 
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
-	code = NULL;
-	
+	code = malloc(sizeof(instruction) * MAX_CODE_LENGTH);
+	table = malloc(sizeof(symbol) * MAX_SYMBOL_COUNT);
+	program(list);
 	/* this line is EXTREMELY IMPORTANT, you MUST uncomment it
 		when you test your code otherwise IT WILL SEGFAULT in 
 		vm.o THIS LINE IS HOW THE VM KNOWS WHERE THE CODE ENDS
-		WHEN COPYING IT TO THE PAS
+		WHEN COPYING IT TO THE PAS*/
 	code[cIndex].opcode = -1;
-	*/
+	if (printTable)
+		printsymboltable();
+	if (printCode)
+		printassemblycode();
 	return code;
 }
 
@@ -479,7 +483,15 @@ if it has the correct name AND kind value AND is unmarked. Then it tries to
 maximize the level value */
 int findSymbol(lexeme token, int type)
 {
-	return 0;
+	int symbolFound = -1;
+	for (int i = 0; i < tokenCtr; i++){
+		if (table[i].name == token.name && table[i].kind == type && table[i].mark == 0){
+			symbolFound = 1;
+			table[i].level = level;
+			break;
+		}
+	}
+	return symbolFound;
 }
 
 /* This function starts at the end of the table and works backward. It ignores 
@@ -487,7 +499,14 @@ marked entries. It looks at an entry’s level and if it is equal to the current
 level it marks that entry. It stops when it finds an unmarked entry whose 
 level is less than the current level */
 void mark(){
-
+	for (int i = tIndex - 1; i > 0; i--){
+		if (table[tIndex].mark != 0)
+			continue;
+		if (table[tIndex].level < level)
+			break;
+		if (table[tIndex].level == level)
+			table[tIndex].mark = 1;
+	}
 }
 
 void emit(int opname, int level, int mvalue)
