@@ -38,6 +38,7 @@ void mark();
 
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
+	// allocate memory 
 	code = malloc(sizeof(instruction) * MAX_CODE_LENGTH);
 	table = malloc(sizeof(symbol) * MAX_SYMBOL_COUNT);
 	program(list);
@@ -46,6 +47,7 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 		vm.o THIS LINE IS HOW THE VM KNOWS WHERE THE CODE ENDS
 		WHEN COPYING IT TO THE PAS*/
 	code[cIndex].opcode = -1;
+	// Print the tables if the flags are == 1
 	if (printTable)
 		printsymboltable();
 	if (printCode)
@@ -75,49 +77,66 @@ void program(lexeme *list){
 }
 
 void block(lexeme *list){
+	// increment level
 	level++;
 	int procedure_idx = tIndex - 1;
+	// check for const declarations 
 	constDeclaration(list);
 	int x = varDeclaration(list);
 	procedureDeclaration(list);
 	table[procedure_idx].addr = cIndex * 3;
 	if (level == 0)
+		// emit INC
 		emit(6, level, x);
 	else	
 		emit(6, level, x + 3);
 	statement(list);
+	// Mark all var, const, and procedures once block is done
 	mark();
+	// deincrement level once the block is done
 	level--;
 }
 
 void constDeclaration(lexeme *list){
+	// Check if the current token is a constant
 	if (list[tokenCtr].type == constsym){
+		// Do while will check for muliple const declarations
 		do {
 			tokenCtr++;
+			// If the token is not an identifier then error
 			if (list[tokenCtr].type != identsym){
 				printparseerror(2);
 				exit(0);
 			}
+			// If multipleDeclarationCheck returns a value other than -1 then error
+			// Meaning a identifier with the same name, mark and level are the same 
 			int symidx = multipleDeclarationCheck(list[tokenCtr]);
 			if (symidx != -1){
 				printparseerror(18);
 				exit(0);
 			}
+			// temp string to store the name of the identifer to add to the sym table later
 			char name[12] = list[tokenCtr].name;
 			tokenCtr++;
+			// Error of token is not an assignment
 			if (list[tokenCtr].type != assignsym){
 				printparseerror(2);
 				exit(0);
 			}
 			tokenCtr++;
+			// Error if the symbol is not a number
 			if (list[tokenCtr].type != numbersym){
 				printparseerror(2);
 				exit(0);
 			}
+			// Add to symbol table and get the next token
 			addToSymbolTable(1, name, list[tokenCtr].value, level, 0, 0);
-			tokenCtr;
+			tokenCtr++;
+			// If the token if a comma continue looping
 		} while (list[tokenCtr].type == commasym);
+		// Error if the token is not a semicolon
 		if (list[tokenCtr].type != semicolonsym){
+			// Print specific error if the token was a identifer
 			if (list[tokenCtr].type == identsym){
 				printparseerror(13);
 				exit(0);
@@ -136,25 +155,31 @@ int varDeclaration(lexeme *list){
 		do {
 			numVars++;
 			tokenCtr++;
+			// Error if token is not an identifer
 			if (list[tokenCtr].type != identsym){
 				printparseerror(3);
 				exit(0);
 			}
+			// Check for multiple declarations, error if there are any
 			int symidx = multipleDeclarationCheck(list[tokenCtr]);
 			if (symidx != -1){
 				printparseerror(18);
 				exit(0);
 			}
+			// Add to the symbol table depending on the level
 			if (level == 0)
 				addToSymbolTable(2, list[tokenCtr].name, 0, level, numVars - 1, 0);
 			else
 				addToSymbolTable(2, list[tokenCtr].name, 0, level, numVars + 2, 0);
 			tokenCtr++;
+			// Loop until reach a token thats not a comma
 		} while (list[tokenCtr].type == commasym);
 		if (list[tokenCtr].type != semicolonsym){
+			// Error for identifer since that requires a comma
 			if (list[tokenCtr].type == identsym){
 				printparseerror(13);
 				exit(0);
+			// Error for lack of a semicolon
 			} else {
 				printparseerror(14);
 				exit(0);
@@ -162,6 +187,7 @@ int varDeclaration(lexeme *list){
 		}
 		tokenCtr++;
 	}
+	// return the number of variables
 	return numVars;
 }
 
@@ -475,7 +501,20 @@ Otherwise it keeps searching until it gets to the end of the table, and if
 nothing is found, returns -1*/
 int multipleDeclarationCheck(lexeme token)
 {
-	return 0;
+	// Loop through symbol table
+	for (int i = 0; i < tIndex; i++){
+		// check if name is the same
+		if (strcmp(table[i].name, token.name) == 0){
+			// check if the symbol is marked
+			if(table[i].mark == 0){
+				// check if the symbol is at the same level
+				if (table[i].level == level){
+					return i;
+				}
+			}
+		}
+	}
+	return -1;
 }
 /*
 This function does a linear search for the given name. An entry only matches 
@@ -485,7 +524,7 @@ int findSymbol(lexeme token, int type)
 {
 	int symbolFound = -1;
 	for (int i = 0; i < tokenCtr; i++){
-		if (table[i].name == token.name && table[i].kind == type && table[i].mark == 0){
+		if (strcmp(table[i].name, token.name) == 0 && table[i].kind == type && table[i].mark == 0){
 			symbolFound = 1;
 			table[i].level = level;
 			break;
@@ -499,9 +538,12 @@ marked entries. It looks at an entry’s level and if it is equal to the current
 level it marks that entry. It stops when it finds an unmarked entry whose 
 level is less than the current level */
 void mark(){
+	// Starts at -1 since after emit it increments to empty structure
 	for (int i = tIndex - 1; i > 0; i--){
+		// Symbol is considered unmarked if the mark var is = 0
 		if (table[tIndex].mark != 0)
 			continue;
+		// Stop looking if current entry has a level less than current level
 		if (table[tIndex].level < level)
 			break;
 		if (table[tIndex].level == level)
