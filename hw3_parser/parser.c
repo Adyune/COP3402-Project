@@ -31,6 +31,7 @@ void condition(lexeme *list);
 void expression(lexeme *list);
 void term(lexeme *list);
 void factor(lexeme *list);
+
 int multipleDeclarationCheck(lexeme token);
 int findSymbol(lexeme token, int type);
 void mark();
@@ -363,16 +364,130 @@ void condition(lexeme *list){
 }
 
 void expression(lexeme *list){
-
+	if (list[tokenCtr].type == subsym){
+		tokenCtr++;
+		term(list);
+		emit(2, level, 1);
+		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
+			if (list[tokenCtr].type == addsym){
+				tokenCtr++;
+				term(list);
+				emit(2, level, 2);
+			}
+			else {
+				tokenCtr++;
+				term(list);
+				emit(2, level, 3);
+			}
+		}
+	}
+	else {
+		if (list[tokenCtr].type == addsym)
+			tokenCtr++;
+		term(list);
+		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
+			if (list[tokenCtr].type == addsym){
+				tokenCtr++;
+				term(list);
+				emit(2, level, 2);
+			}
+			else {
+				tokenCtr++;
+				term(list);
+				emit(2, level, 3);
+			}
+		}
+		if (list[tokenCtr].type == identsym || list[tokenCtr].type == numbersym || list[tokenCtr].type == oddsym){
+			printparseerror(17);
+			exit(0);
+		}
+	}
 }
-void term(lexeme *list){
 
+void term(lexeme *list){
+	factor(list);
+	while (list[tokenCtr].type == multsym || list[tokenCtr].type == divsym ||
+		   list[tokenCtr].type == modsym)
+	{
+		if (list[tokenCtr].type == multsym){
+			tokenCtr++;
+			factor(list);
+			emit(2, level, 4);
+		} else if (list[tokenCtr].type == divsym){
+			tokenCtr++;
+			factor(list);
+			emit(2, level, 5);
+		} else {
+			tokenCtr++;
+			factor(list);
+			emit(2, level, 7);
+		}
+	}
 }
 
 void factor(lexeme *list){
-	if (1){
-
+	if (list[tokenCtr].type == identsym){
+		int symIdx_var = findSymbol(list[tokenCtr], 2);
+		int symIdx_const = findSymbol(list[tokenCtr], 1);
+		if (symIdx_var == -1 && symIdx_const == -1){
+			if (findSymbol(list[tokenCtr], 3) != -1){
+				printparseerror(11);
+				exit(0);
+			} else {
+				printparseerror(19);
+				exit(0);
+			}
+		}
+		if (symIdx_var == -1){ // const
+			emit(1, level, table[symIdx_const].val);
+		} else if (symIdx_const == -1 || table[symIdx_var].level > table[symIdx_const].level){
+			emit(3, level - table[symIdx_var].level, table[symIdx_var].addr);
+		} else {
+			emit(1, level, table[symIdx_const].val);
+		}
+		tokenCtr++;
+	} else if (list[tokenCtr].type == numbersym){
+		emit(1, level, list[tokenCtr].value);
+		tokenCtr++;
+	} else if (list[tokenCtr].type == lparensym){
+		tokenCtr++;
+		expression(list);
+		if (list[tokenCtr].type != rparensym){
+			printparseerror(12);
+			exit(0);
+		}
+		tokenCtr++;
+	} else{
+		printparseerror(11);
+		exit(0);
 	}
+}
+
+/*This function should do a linear pass through the symbol table looking for 
+the symbol name given. If it finds that name, it checks to see if it’s 
+unmarked (no? keep searching). If it finds an unmarked instance, it checks 
+the level. If the level is equal to the current level, it returns that index. 
+Otherwise it keeps searching until it gets to the end of the table, and if 
+nothing is found, returns -1*/
+int multipleDeclarationCheck(lexeme token)
+{
+	return 0;
+}
+/*
+This function does a linear search for the given name. An entry only matches 
+if it has the correct name AND kind value AND is unmarked. Then it tries to 
+maximize the level value */
+int findSymbol(lexeme token, int type)
+{
+	return 0;
+}
+
+/* This function starts at the end of the table and works backward. It ignores 
+marked entries. It looks at an entry’s level and if it is equal to the current 
+level it marks that entry. It stops when it finds an unmarked entry whose 
+level is less than the current level */
+void mark(){
+
 }
 
 void emit(int opname, int level, int mvalue)
