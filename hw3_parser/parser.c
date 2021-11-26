@@ -116,7 +116,8 @@ void constDeclaration(lexeme *list){
 				exit(0);
 			}
 			// temp string to store the name of the identifer to add to the sym table later
-			char name[12] = list[tokenCtr].name;
+			char name[12];
+			strcpy(name, list[tokenCtr].name);
 			tokenCtr++;
 			// Error of token is not an assignment
 			if (list[tokenCtr].type != assignsym){
@@ -522,15 +523,15 @@ if it has the correct name AND kind value AND is unmarked. Then it tries to
 maximize the level value */
 int findSymbol(lexeme token, int type)
 {
-	int symbolFound = -1;
+	int symbolIndex = -1;
 	for (int i = 0; i < tokenCtr; i++){
 		if (strcmp(table[i].name, token.name) == 0 && table[i].kind == type && table[i].mark == 0){
-			symbolFound = 1;
-			table[i].level = level;
-			break;
+			// This will get the index of the symbol of the highest level
+			if (symbolIndex < table[i].level)
+				symbolIndex = i;
 		}
 	}
-	return symbolFound;
+	return symbolIndex;
 }
 
 /* This function starts at the end of the table and works backward. It ignores 
