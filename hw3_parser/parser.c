@@ -195,23 +195,29 @@ int varDeclaration(lexeme *list){
 void procedureDeclaration(lexeme *list){
 	while (list[tokenCtr].type == procsym){
 		tokenCtr++;
+		// Error if there is no identifer
 		if (list[tokenCtr].type != identsym){
 			printparseerror(4);
 			exit(0);
 		}
+		// Check if the procedure has already been declared, error if it is
 		int symidx = multipleDeclarationCheck(list[tokenCtr]);
 		if (symidx != -1){
 			printparseerror(18);
 			exit(0);
 		}
+		// add it to table
 		addToSymbolTable(3, list[tokenCtr].name, 0, level, 0, 0);
 		tokenCtr++;
+		// error if there is no semicolon at the end
 		if (list[tokenCtr].type != semicolonsym){
 			printparseerror(4);
 			exit(0);
 		}
 		tokenCtr++;
+		// Get the block of code within the procedure 
 		block(list);
+		// error if there is no semicolor after 
 		if (list[tokenCtr].type != semicolonsym){
 			printparseerror(14);
 			exit(0);
@@ -402,12 +408,12 @@ void expression(lexeme *list){
 		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
 			if (list[tokenCtr].type == addsym){
 				tokenCtr++;
-				term(list);
+				term(list); // Get next factor for math
 				emit(2, level, 2);
 			}
 			else {
 				tokenCtr++;
-				term(list);
+				term(list); // Get next factor for math
 				emit(2, level, 3);
 			}
 		}
@@ -419,15 +425,16 @@ void expression(lexeme *list){
 		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
 			if (list[tokenCtr].type == addsym){
 				tokenCtr++;
-				term(list);
+				term(list); // Get next factor for math
 				emit(2, level, 2);
 			}
 			else {
 				tokenCtr++;
-				term(list);
+				term(list); // Get next factor for math
 				emit(2, level, 3);
 			}
 		}
+		// Bad Arithmatic Error
 		if (list[tokenCtr].type == identsym || list[tokenCtr].type == numbersym || list[tokenCtr].type == oddsym){
 			printparseerror(17);
 			exit(0);
@@ -436,39 +443,47 @@ void expression(lexeme *list){
 }
 
 void term(lexeme *list){
+	// Get a factor for the math
 	factor(list);
+	// check for multiplication, division, and modulo since those have higher priority than + -
 	while (list[tokenCtr].type == multsym || list[tokenCtr].type == divsym ||
 		   list[tokenCtr].type == modsym)
 	{
 		if (list[tokenCtr].type == multsym){
 			tokenCtr++;
-			factor(list);
+			factor(list); // Get next factor for math
 			emit(2, level, 4);
 		} else if (list[tokenCtr].type == divsym){
 			tokenCtr++;
-			factor(list);
+			factor(list); // Get next factor for math
 			emit(2, level, 5);
 		} else {
 			tokenCtr++;
-			factor(list);
+			factor(list); // Get next factor for math
 			emit(2, level, 7);
 		}
 	}
 }
 
 void factor(lexeme *list){
+	// Case where the token is an identifer
 	if (list[tokenCtr].type == identsym){
+		// Check for the identifer as a variable and constant
 		int symIdx_var = findSymbol(list[tokenCtr], 2);
 		int symIdx_const = findSymbol(list[tokenCtr], 1);
+		// If no symbol is found then
 		if (symIdx_var == -1 && symIdx_const == -1){
+			// Print a specific error if the ident was a procedure
 			if (findSymbol(list[tokenCtr], 3) != -1){
 				printparseerror(11);
 				exit(0);
+			// Print an error for invalid identifer
 			} else {
 				printparseerror(19);
 				exit(0);
 			}
 		}
+		// Emit to the code 
 		if (symIdx_var == -1){ // const
 			emit(1, level, table[symIdx_const].val);
 		} else if (symIdx_const == -1 || table[symIdx_var].level > table[symIdx_const].level){
@@ -482,12 +497,15 @@ void factor(lexeme *list){
 		tokenCtr++;
 	} else if (list[tokenCtr].type == lparensym){
 		tokenCtr++;
+		// Get the code inside of the parenthesis 
 		expression(list);
+		// Error if no right parenthesis is found
 		if (list[tokenCtr].type != rparensym){
 			printparseerror(12);
 			exit(0);
 		}
 		tokenCtr++;
+		// Error since only math expressions can only have const, var, num, and parenthesis
 	} else{
 		printparseerror(11);
 		exit(0);
