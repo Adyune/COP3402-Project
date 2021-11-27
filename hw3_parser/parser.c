@@ -12,7 +12,7 @@ symbol *table;
 int tIndex;
 int level;
 // Tracks tokens
-int tokenCtr = 0;
+int tokenCtr;
 
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
@@ -38,6 +38,10 @@ void mark();
 
 instruction *parse(lexeme *list, int printTable, int printCode)
 {
+	
+	// Set the token counter to 0 for the first token
+	tokenCtr = 0;
+	//printf("%s, %d, %d \n", list[tokenCtr].name, list[tokenCtr].value, list[tokenCtr].type);
 	// allocate memory 
 	code = malloc(sizeof(instruction) * MAX_CODE_LENGTH);
 	table = malloc(sizeof(symbol) * MAX_SYMBOL_COUNT);
@@ -56,8 +60,10 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 }
 
 void program(lexeme *list){
+	// printf("Program has been called\n");
 	// Emit JMP to main
 	emit(7, 0, 3);
+	// Add main function to the table, address to be determined later
 	addToSymbolTable(3, "main", 0, 0, 0, 0);
 	level = -1;
 	block(list);
@@ -68,7 +74,7 @@ void program(lexeme *list){
 		}	
 		// Emit Halt
 		emit(9, 0, 3);
-		for (int i = 0; i < (sizeof(code)/ sizeof(code[0])); i++){
+		for (int i = 0; i < cIndex - 1; i++){
 			if (code[i].opcode == 5){
 				code[i].m = table[code[i].m].addr;
 			}
@@ -77,19 +83,23 @@ void program(lexeme *list){
 }
 
 void block(lexeme *list){
+	// printf("Block has been called\n");
 	// increment level
 	level++;
+	// printf("%d\n", level);
 	int procedure_idx = tIndex - 1;
 	// check for const declarations 
 	constDeclaration(list);
+	// check variables
 	int x = varDeclaration(list);
+	// check for procedure declarations
 	procedureDeclaration(list);
 	table[procedure_idx].addr = cIndex * 3;
 	if (level == 0)
 		// emit INC
-		emit(6, level, x);
+		emit(6, 0, x);
 	else	
-		emit(6, level, x + 3);
+		emit(6, 0, x + 3);
 	statement(list);
 	// Mark all var, const, and procedures once block is done
 	mark();
@@ -98,11 +108,13 @@ void block(lexeme *list){
 }
 
 void constDeclaration(lexeme *list){
+	// printf("const has been called\n");
 	// Check if the current token is a constant
 	if (list[tokenCtr].type == constsym){
 		// Do while will check for muliple const declarations
 		do {
 			tokenCtr++;
+			// printf("%d\n", tokenCtr);
 			// If the token is not an identifier then error
 			if (list[tokenCtr].type != identsym){
 				printparseerror(2);
@@ -151,8 +163,9 @@ void constDeclaration(lexeme *list){
 }
 
 int varDeclaration(lexeme *list){
+	// printf("Var has been called\n");
 	int numVars = 0;
-	if (list[tokenCtr].type != varsym){
+	if (list[tokenCtr].type == varsym){
 		do {
 			numVars++;
 			tokenCtr++;
@@ -193,6 +206,7 @@ int varDeclaration(lexeme *list){
 }
 
 void procedureDeclaration(lexeme *list){
+	// printf("preocedure has been called\n");
 	while (list[tokenCtr].type == procsym){
 		tokenCtr++;
 		// Error if there is no identifer
@@ -224,11 +238,12 @@ void procedureDeclaration(lexeme *list){
 		}
 		tokenCtr++;
 		// Emit return
-		emit(2, level, 0);
+		emit(2, 0, 0);
 	}
 }
 
 void statement(lexeme *list){
+	// printf("statement has been called %d\n ", tokenCtr);
 	if (list[tokenCtr].type == identsym){
 		int symidx = findSymbol(list[tokenCtr], 2);
 		if (symidx == -1){
@@ -245,7 +260,9 @@ void statement(lexeme *list){
 			printparseerror(5);
 			exit(0);
 		}
+		tokenCtr++;
 		expression(list);
+		// STO
 		emit(4, level - table[symidx].level, table[symidx].addr);
 		return;
 	}
@@ -275,7 +292,8 @@ void statement(lexeme *list){
 		tokenCtr++;
 		condition(list);
 		int jpcIdx = cIndex;
-		emit(8, level, jpcIdx);
+		// JPC
+		emit(8, 0, jpcIdx);
 		if (list[tokenCtr].type != thensym){
 			printparseerror(8);
 			exit(0);
@@ -284,6 +302,7 @@ void statement(lexeme *list){
 		statement(list);
 		if (list[tokenCtr].type == elsesym){
 			int jmpidx = cIndex;
+			//JMP
 			emit(7, level, jmpidx);
 			code[jpcIdx].m = cIndex * 3;
 			statement(list);
@@ -304,9 +323,11 @@ void statement(lexeme *list){
 		}
 		tokenCtr++;
 		int jpcidx = cIndex;
+		// JPC
 		emit(8, level, jpcidx);
 		statement(list);
-		emit (7, level, loopidx * 3);
+		// JMP
+		emit (7, 0, loopidx * 3);
 		code[jpcidx].m = cIndex * 3;
 		return;
 	}
@@ -327,7 +348,9 @@ void statement(lexeme *list){
 			}
 		}
 		tokenCtr++;
-		emit(9, level, 2);
+		// READ
+		emit(9, 0, 2);
+		// STO
 		emit(4, level - table[symidx].level, table[symidx].addr);
 		return;
 	}
@@ -335,7 +358,7 @@ void statement(lexeme *list){
 	if (list[tokenCtr].type == writesym){
 		tokenCtr++;
 		expression(list);
-		emit (9, level, 1);
+		emit (9, 0, 1);
 		return;
 	}
 	if (list[tokenCtr].type == callsym){
@@ -356,42 +379,50 @@ void statement(lexeme *list){
 }
 
 void condition(lexeme *list){
+	// printf("condition has been called\n");
 	if (list[tokenCtr].type == oddsym){
 		tokenCtr++;
 		expression(list);
-		emit(2, level, 6);
+		// ODD
+		emit(2, 0, 6);
 	}
 	else {
 		expression(list);
 		if (list[tokenCtr].type == eqlsym){
 			tokenCtr++;
 			expression(list);
-			emit(2, level, 8);
+			// EQL
+			emit(2, 0, 8);
 		}
 		else if (list[tokenCtr].type == neqsym){
 			tokenCtr++;
 			expression(list);
-			emit(2, level, 9);
+			// NEQ
+			emit(2, 0, 9);
 		}
 		else if (list[tokenCtr].type == lsssym){
 			tokenCtr++;
 			expression(list);
-			emit(2, level, 10);
+			// LSS
+			emit(2, 0, 10);
 		}
 		else if (list[tokenCtr].type == leqsym){
 			tokenCtr++;
 			expression(list);
-			emit(2, level, 11);
+			// LEQ
+			emit(2, 0, 11);
 		}
 		else if (list[tokenCtr].type == gtrsym){
 			tokenCtr++;
 			expression(list);
-			emit(2, level, 12);
+			// GTR
+			emit(2, 0, 12);
 		}
 		else if (list[tokenCtr].type == geqsym){
 			tokenCtr++;
 			expression(list);
-			emit(2, level, 13);
+			// GEQ
+			emit(2, 0, 13);
 		}
 		else {
 			printparseerror(10);
@@ -401,20 +432,24 @@ void condition(lexeme *list){
 }
 
 void expression(lexeme *list){
+	// printf("expression has been called\n");
 	if (list[tokenCtr].type == subsym){
 		tokenCtr++;
 		term(list);
-		emit(2, level, 1);
+		//NEG
+		emit(2, 0, 1);
 		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
 			if (list[tokenCtr].type == addsym){
 				tokenCtr++;
 				term(list); // Get next factor for math
-				emit(2, level, 2);
+				// ADD
+				emit(2, 0, 2);
 			}
 			else {
 				tokenCtr++;
 				term(list); // Get next factor for math
-				emit(2, level, 3);
+				// SUB
+				emit(2, 0, 3);
 			}
 		}
 	}
@@ -426,11 +461,13 @@ void expression(lexeme *list){
 			if (list[tokenCtr].type == addsym){
 				tokenCtr++;
 				term(list); // Get next factor for math
+				// ADD
 				emit(2, level, 2);
 			}
 			else {
 				tokenCtr++;
 				term(list); // Get next factor for math
+				// SUB
 				emit(2, level, 3);
 			}
 		}
@@ -443,6 +480,7 @@ void expression(lexeme *list){
 }
 
 void term(lexeme *list){
+	// printf("term has been called\n");
 	// Get a factor for the math
 	factor(list);
 	// check for multiplication, division, and modulo since those have higher priority than + -
@@ -452,20 +490,24 @@ void term(lexeme *list){
 		if (list[tokenCtr].type == multsym){
 			tokenCtr++;
 			factor(list); // Get next factor for math
-			emit(2, level, 4);
+			// MUL
+			emit(2, 0, 4);
 		} else if (list[tokenCtr].type == divsym){
 			tokenCtr++;
 			factor(list); // Get next factor for math
-			emit(2, level, 5);
+			// DIV
+			emit(2, 0, 5);
 		} else {
 			tokenCtr++;
 			factor(list); // Get next factor for math
-			emit(2, level, 7);
+			// MOD
+			emit(2, 0, 7);
 		}
 	}
 }
 
 void factor(lexeme *list){
+	// printf("factor has been called\n");
 	// Case where the token is an identifer
 	if (list[tokenCtr].type == identsym){
 		// Check for the identifer as a variable and constant
@@ -485,15 +527,19 @@ void factor(lexeme *list){
 		}
 		// Emit to the code 
 		if (symIdx_var == -1){ // const
+			// LIT
 			emit(1, level, table[symIdx_const].val);
 		} else if (symIdx_const == -1 || table[symIdx_var].level > table[symIdx_const].level){
+			// LOD
 			emit(3, level - table[symIdx_var].level, table[symIdx_var].addr);
 		} else {
+			// LIT
 			emit(1, level, table[symIdx_const].val);
 		}
 		tokenCtr++;
 	} else if (list[tokenCtr].type == numbersym){
-		emit(1, level, list[tokenCtr].value);
+		// LIT
+		emit(1, 0, list[tokenCtr].value);
 		tokenCtr++;
 	} else if (list[tokenCtr].type == lparensym){
 		tokenCtr++;
@@ -507,6 +553,7 @@ void factor(lexeme *list){
 		tokenCtr++;
 		// Error since only math expressions can only have const, var, num, and parenthesis
 	} else{
+		printf("%d\n", tokenCtr);
 		printparseerror(11);
 		exit(0);
 	}
@@ -524,7 +571,7 @@ int multipleDeclarationCheck(lexeme token)
 	for (int i = 0; i < tIndex; i++){
 		// check if name is the same
 		if (strcmp(table[i].name, token.name) == 0){
-			// check if the symbol is marked
+			// check if the symbol is unmarked
 			if(table[i].mark == 0){
 				// check if the symbol is at the same level
 				if (table[i].level == level){
@@ -557,16 +604,18 @@ marked entries. It looks at an entry’s level and if it is equal to the current
 level it marks that entry. It stops when it finds an unmarked entry whose 
 level is less than the current level */
 void mark(){
-	// Starts at -1 since after emit it increments to empty structure
-	for (int i = tIndex - 1; i > 0; i--){
-		// Symbol is considered unmarked if the mark var is = 0
-		if (table[tIndex].mark != 0)
+	// Loop and mark entries at current level
+	for (int i = tIndex; i >= 0; i--){
+		// Symbol is considered marked if the mark var is = 1
+		if (table[i].mark == 1)
 			continue;
 		// Stop looking if current entry has a level less than current level
-		if (table[tIndex].level < level)
+		if (table[i].level < level){
 			break;
-		if (table[tIndex].level == level)
-			table[tIndex].mark = 1;
+		}
+		if (table[i].level == level){
+			table[i].mark = 1;
+		}
 	}
 }
 

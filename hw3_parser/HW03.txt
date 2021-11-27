@@ -288,6 +288,6 @@ FACTOR
         EXPRESSION
         if token != rparentsym
             error
-        et next token
+        get next token
     else
         error
