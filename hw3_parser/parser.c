@@ -74,7 +74,8 @@ void program(lexeme *list){
 		}	
 		// Emit Halt
 		emit(9, 0, 3);
-		for (int i = 0; i < cIndex - 1; i++){
+		// Get the proper address of the call functions
+		for (int i = 0; i < cIndex; i++){
 			if (code[i].opcode == 5){
 				code[i].m = table[code[i].m].addr;
 			}
@@ -281,6 +282,9 @@ void statement(lexeme *list){
 				exit(0);
 			}
 			else{
+				// printf("%d\n", tokenCtr);
+				// printsymboltable();
+				// printassemblycode();
 				printparseerror(16);
 				exit(0);
 			}
@@ -293,7 +297,7 @@ void statement(lexeme *list){
 		condition(list);
 		int jpcIdx = cIndex;
 		// JPC
-		emit(8, 0, jpcIdx);
+		emit(8, 0, 0);
 		if (list[tokenCtr].type != thensym){
 			printparseerror(8);
 			exit(0);
@@ -303,19 +307,28 @@ void statement(lexeme *list){
 		if (list[tokenCtr].type == elsesym){
 			int jmpidx = cIndex;
 			//JMP
-			emit(7, level, jmpidx);
+			emit(7, 0, 0);
 			code[jpcIdx].m = cIndex * 3;
+			// printf("if 1 code.m = %d\n", cIndex * 3);
+
+			tokenCtr++;
 			statement(list);
+
 			code[jmpidx].m = cIndex * 3;
+			// printf("if 1 jmp code.m = %d\n", cIndex * 3);
+
 		}
 		else {
 			code[jpcIdx].m = cIndex * 3;
+			// printf("if 2 code.m = %d\n", cIndex * 3);
+
 		}
 		return;
 	}
 	if (list[tokenCtr].type == whilesym){
 		tokenCtr++;
 		int loopidx = cIndex;
+		// get the condition of the loop
 		condition(list);
 		if (list[tokenCtr].type != dosym){
 			printparseerror(9);
@@ -324,11 +337,13 @@ void statement(lexeme *list){
 		tokenCtr++;
 		int jpcidx = cIndex;
 		// JPC
-		emit(8, level, jpcidx);
+		emit(8, 0, 0);
+		// printf("While init\n");
 		statement(list);
 		// JMP
-		emit (7, 0, loopidx * 3);
+		emit(7, 0, loopidx * 3);
 		code[jpcidx].m = cIndex * 3;
+		// printf("while 1 code.m = %d\n", cIndex * 3);
 		return;
 	}
 	if (list[tokenCtr].type == readsym){
@@ -339,10 +354,12 @@ void statement(lexeme *list){
 		}
 		int symidx = findSymbol(list[tokenCtr], 2);
 		if (symidx == -1){
+			// If the symbol is found but is a const or procedure call error 6
 			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 3)){
 				printparseerror(6);
 				exit(0);
 			} else {
+				// Other wise error due to undeclared identifier
 				printparseerror(19);
 				exit(0);
 			}
@@ -358,7 +375,8 @@ void statement(lexeme *list){
 	if (list[tokenCtr].type == writesym){
 		tokenCtr++;
 		expression(list);
-		emit (9, 0, 1);
+		// Write
+		emit(9, 0, 1);
 		return;
 	}
 	if (list[tokenCtr].type == callsym){
@@ -374,7 +392,9 @@ void statement(lexeme *list){
 			}
 		}
 		tokenCtr++;
-		emit (5, level - table[symidx].level, symidx);
+		emit(5, level - table[symidx].level, symidx);
+		// printf("Symbol Index: %d\n Symbol Address %d\n", symidx, table[symidx].addr);
+
 	}
 }
 
@@ -462,13 +482,13 @@ void expression(lexeme *list){
 				tokenCtr++;
 				term(list); // Get next factor for math
 				// ADD
-				emit(2, level, 2);
+				emit(2, 0, 2);
 			}
 			else {
 				tokenCtr++;
 				term(list); // Get next factor for math
 				// SUB
-				emit(2, level, 3);
+				emit(2, 0, 3);
 			}
 		}
 		// Bad Arithmatic Error
@@ -528,13 +548,13 @@ void factor(lexeme *list){
 		// Emit to the code 
 		if (symIdx_var == -1){ // const
 			// LIT
-			emit(1, level, table[symIdx_const].val);
+			emit(1, 0, table[symIdx_const].val);
 		} else if (symIdx_const == -1 || table[symIdx_var].level > table[symIdx_const].level){
 			// LOD
 			emit(3, level - table[symIdx_var].level, table[symIdx_var].addr);
 		} else {
 			// LIT
-			emit(1, level, table[symIdx_const].val);
+			emit(1, 0, table[symIdx_const].val);
 		}
 		tokenCtr++;
 	} else if (list[tokenCtr].type == numbersym){
@@ -553,7 +573,6 @@ void factor(lexeme *list){
 		tokenCtr++;
 		// Error since only math expressions can only have const, var, num, and parenthesis
 	} else{
-		printf("%d\n", tokenCtr);
 		printparseerror(11);
 		exit(0);
 	}
@@ -604,8 +623,9 @@ marked entries. It looks at an entry’s level and if it is equal to the current
 level it marks that entry. It stops when it finds an unmarked entry whose 
 level is less than the current level */
 void mark(){
+	// printf("\n");
 	// Loop and mark entries at current level
-	for (int i = tIndex; i >= 0; i--){
+	for (int i = tIndex -1; i >= 0; i--){
 		// Symbol is considered marked if the mark var is = 1
 		if (table[i].mark == 1)
 			continue;
@@ -614,6 +634,7 @@ void mark(){
 			break;
 		}
 		if (table[i].level == level){
+			// printf("%s marked!\n", table[i].name);
 			table[i].mark = 1;
 		}
 	}

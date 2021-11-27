@@ -81,12 +81,12 @@ echo -n "Really Complex Tipping Test : "
 ./a.out tip.txt -a -s <<< '1 10 51 17 2 10 51 17 0' > output.txt
 executed=$?
 if [[ $executed !=  0 ]]; then
-	echo ":'("
+	echo ":'( death"
 else
 	diff -w -B output.txt tipout.txt &> /dev/null
 	correct=$?
 	if [[ $correct != 0 ]]; then
-		echo ":'("
+		echo ":'( skill difference"
 	else
 		echo "───==≡≡ΣΣ((( つºل͜º)つ"
 	fi
