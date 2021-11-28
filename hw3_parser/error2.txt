@@ -1,0 +1,6 @@
+const a 13;
+var x;
+procedure alpha;;
+begin
+	x := 14 * 3 + (51 % 7);;
+end
