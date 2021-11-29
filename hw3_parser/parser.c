@@ -13,6 +13,8 @@ int tIndex;
 int level;
 // Tracks tokens
 int tokenCtr;
+// Signals if the parser encounters and error
+int errorFlag;
 
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
@@ -41,7 +43,8 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 	
 	// Set the token counter to 0 for the first token
 	tokenCtr = 0;
-	//printf("%s, %d, %d \n", list[tokenCtr].name, list[tokenCtr].value, list[tokenCtr].type);
+	// Set the errorFlag to 0
+	errorFlag = 0;
 	// allocate memory 
 	code = malloc(sizeof(instruction) * MAX_CODE_LENGTH);
 	table = malloc(sizeof(symbol) * MAX_SYMBOL_COUNT);
@@ -50,13 +53,17 @@ instruction *parse(lexeme *list, int printTable, int printCode)
 		when you test your code otherwise IT WILL SEGFAULT in 
 		vm.o THIS LINE IS HOW THE VM KNOWS WHERE THE CODE ENDS
 		WHEN COPYING IT TO THE PAS*/
-	code[cIndex].opcode = -1;
-	// Print the tables if the flags are == 1
-	if (printTable)
-		printsymboltable();
-	if (printCode)
-		printassemblycode();
-	return code;
+	if (errorFlag == 0){
+		code[cIndex].opcode = -1;	
+		// Print the tables if the flags are == 1
+		if (printTable)
+			printsymboltable();
+		if (printCode)
+			printassemblycode();
+		return code;
+	}
+	else 
+		return NULL;
 }
 
 void program(lexeme *list){
@@ -67,34 +74,49 @@ void program(lexeme *list){
 	addToSymbolTable(3, "main", 0, 0, 0, 0);
 	level = -1;
 	block(list);
-		// Error if last token is not a period
-		if (list[tokenCtr].type != periodsym){
-			printparseerror(1);
-			exit(0);
-		}	
-		// Emit Halt
-		emit(9, 0, 3);
-		// Get the proper address of the call functions
-		for (int i = 0; i < cIndex; i++){
-			if (code[i].opcode == 5){
-				code[i].m = table[code[i].m].addr;
-			}
+	if (errorFlag == 1){
+		return;
+	}
+	// Error if last token is not a period
+	if (list[tokenCtr].type != periodsym){
+		printparseerror(1);
+		errorFlag = 1;
+		return;
+	}	
+	// Emit Halt
+	emit(9, 0, 3);
+	// Get the proper address of the call functions
+	for (int i = 0; i < cIndex; i++){
+		if (code[i].opcode == 5){
+			code[i].m = table[code[i].m].addr;
 		}
-		code[0].m = table[0].addr;
+	}
+	code[0].m = table[0].addr;
 }
 
 void block(lexeme *list){
-	// printf("Block has been called\n");
+	if (errorFlag == 1){
+		return;
+	}
 	// increment level
 	level++;
 	// printf("%d\n", level);
 	int procedure_idx = tIndex - 1;
 	// check for const declarations 
 	constDeclaration(list);
+	if (errorFlag == 1){
+		return;
+	}
 	// check variables
 	int x = varDeclaration(list);
+	if (errorFlag == 1){
+		return;
+	}
 	// check for procedure declarations
 	procedureDeclaration(list);
+	if (errorFlag == 1){
+		return;
+	}
 	table[procedure_idx].addr = cIndex * 3;
 	if (level == 0)
 		// emit INC
@@ -102,6 +124,9 @@ void block(lexeme *list){
 	else	
 		emit(6, 0, x + 3);
 	statement(list);
+	if (errorFlag == 1){
+		return;
+	}
 	// Mark all var, const, and procedures once block is done
 	mark();
 	// deincrement level once the block is done
@@ -119,14 +144,16 @@ void constDeclaration(lexeme *list){
 			// If the token is not an identifier then error
 			if (list[tokenCtr].type != identsym){
 				printparseerror(2);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 			// If multipleDeclarationCheck returns a value other than -1 then error
 			// Meaning a identifier with the same name, mark and level are the same 
 			int symidx = multipleDeclarationCheck(list[tokenCtr]);
 			if (symidx != -1){
 				printparseerror(18);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 			// temp string to store the name of the identifer to add to the sym table later
 			char name[12];
@@ -135,13 +162,15 @@ void constDeclaration(lexeme *list){
 			// Error of token is not an assignment
 			if (list[tokenCtr].type != assignsym){
 				printparseerror(2);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 			tokenCtr++;
 			// Error if the symbol is not a number
 			if (list[tokenCtr].type != numbersym){
 				printparseerror(2);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 			// Add to symbol table and get the next token
 			addToSymbolTable(1, name, list[tokenCtr].value, level, 0, 0);
@@ -153,10 +182,12 @@ void constDeclaration(lexeme *list){
 			// Print specific error if the token was a identifer
 			if (list[tokenCtr].type == identsym){
 				printparseerror(13);
-				exit(0);
+				errorFlag = 1;
+				return;
 			} else {
 				printparseerror(14);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 		}
 		tokenCtr++;
@@ -173,13 +204,15 @@ int varDeclaration(lexeme *list){
 			// Error if token is not an identifer
 			if (list[tokenCtr].type != identsym){
 				printparseerror(3);
-				exit(0);
+				errorFlag = 1;
+				return -1;
 			}
 			// Check for multiple declarations, error if there are any
 			int symidx = multipleDeclarationCheck(list[tokenCtr]);
 			if (symidx != -1){
 				printparseerror(18);
-				exit(0);
+				errorFlag = 1;
+				return -1;
 			}
 			// Add to the symbol table depending on the level
 			if (level == 0)
@@ -193,11 +226,13 @@ int varDeclaration(lexeme *list){
 			// Error for identifer since that requires a comma
 			if (list[tokenCtr].type == identsym){
 				printparseerror(13);
-				exit(0);
+				errorFlag = 1;
+				return -1;
 			// Error for lack of a semicolon
 			} else {
 				printparseerror(14);
-				exit(0);
+				errorFlag = 1;
+				return -1;
 			}
 		}
 		tokenCtr++;
@@ -213,13 +248,15 @@ void procedureDeclaration(lexeme *list){
 		// Error if there is no identifer
 		if (list[tokenCtr].type != identsym){
 			printparseerror(4);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		// Check if the procedure has already been declared, error if it is
 		int symidx = multipleDeclarationCheck(list[tokenCtr]);
 		if (symidx != -1){
 			printparseerror(18);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		// add it to table
 		addToSymbolTable(3, list[tokenCtr].name, 0, level, 0, 0);
@@ -227,15 +264,20 @@ void procedureDeclaration(lexeme *list){
 		// error if there is no semicolon at the end
 		if (list[tokenCtr].type != semicolonsym){
 			printparseerror(4);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		tokenCtr++;
 		// Get the block of code within the procedure 
 		block(list);
+		if (errorFlag == 1){
+			return;
+		}
 		// error if there is no semicolor after 
 		if (list[tokenCtr].type != semicolonsym){
 			printparseerror(14);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		tokenCtr++;
 		// Emit return
@@ -244,25 +286,38 @@ void procedureDeclaration(lexeme *list){
 }
 
 void statement(lexeme *list){
+	if (errorFlag == 1){
+		return;
+	}
 	// printf("statement has been called %d\n ", tokenCtr);
 	if (list[tokenCtr].type == identsym){
 		int symidx = findSymbol(list[tokenCtr], 2);
 		if (symidx == -1){
+			// If the token is a constant or a procedure error as variables can only be assigned
 			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 3)){
 				printparseerror(6);
-				exit(0);
+				errorFlag = 1;
+				return;
+			// Errors as the token is not found
 			} else {
 				printparseerror(19);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 		}
 		tokenCtr++;
+		// Errors as assignment requires :=
 		if (list[tokenCtr].type != assignsym){
 			printparseerror(5);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		tokenCtr++;
+		// get the expression of the assignment
 		expression(list);
+		if (errorFlag == 1){
+			return;
+		}
 		// STO
 		emit(4, level - table[symidx].level, table[symidx].addr);
 		return;
@@ -271,6 +326,9 @@ void statement(lexeme *list){
 		do{
 			tokenCtr++;
 			statement(list);
+			if (errorFlag == 1){
+				return;
+			}
 		} while (list[tokenCtr].type == semicolonsym);
 		if (list[tokenCtr].type != endsym){
 			if (list[tokenCtr].type == identsym || list[tokenCtr].type == beginsym ||
@@ -278,15 +336,16 @@ void statement(lexeme *list){
 				list[tokenCtr].type == readsym || list[tokenCtr].type == writesym ||
 				list[tokenCtr].type == callsym)
 			{
+				// Errors as tokens that use these are typically used in statements and they need semicolons
 				printparseerror(15);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 			else{
-				// printf("%d\n", tokenCtr);
-				// printsymboltable();
-				// printassemblycode();
+				// Errors if there is no end token
 				printparseerror(16);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 		}
 		tokenCtr++;
@@ -295,33 +354,41 @@ void statement(lexeme *list){
 	if (list[tokenCtr].type == ifsym){
 		tokenCtr++;
 		condition(list);
+		if (errorFlag == 1){
+			return;
+		}
 		int jpcIdx = cIndex;
 		// JPC
 		emit(8, 0, 0);
+		// Errors if the next token after the condition is not then
 		if (list[tokenCtr].type != thensym){
 			printparseerror(8);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		tokenCtr++;
 		statement(list);
+		if (errorFlag == 1){
+			return;
+		}
 		if (list[tokenCtr].type == elsesym){
 			int jmpidx = cIndex;
 			//JMP
 			emit(7, 0, 0);
+			// Set address of the jpc
 			code[jpcIdx].m = cIndex * 3;
-			// printf("if 1 code.m = %d\n", cIndex * 3);
-
+			// Increment to the next token as this will error as the token will still be else when statement is called
 			tokenCtr++;
 			statement(list);
-
+			if (errorFlag == 1){
+				return;
+			}
+			// Set address of the jmp
 			code[jmpidx].m = cIndex * 3;
-			// printf("if 1 jmp code.m = %d\n", cIndex * 3);
-
 		}
 		else {
+			// Set address of the jpc
 			code[jpcIdx].m = cIndex * 3;
-			// printf("if 2 code.m = %d\n", cIndex * 3);
-
 		}
 		return;
 	}
@@ -330,16 +397,23 @@ void statement(lexeme *list){
 		int loopidx = cIndex;
 		// get the condition of the loop
 		condition(list);
+		if (errorFlag == 1){
+			return;
+		}
+		// Error as while must be followed by do 
 		if (list[tokenCtr].type != dosym){
 			printparseerror(9);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		tokenCtr++;
 		int jpcidx = cIndex;
 		// JPC
 		emit(8, 0, 0);
-		// printf("While init\n");
 		statement(list);
+		if (errorFlag == 1){
+			return;
+		}
 		// JMP
 		emit(7, 0, loopidx * 3);
 		code[jpcidx].m = cIndex * 3;
@@ -348,20 +422,24 @@ void statement(lexeme *list){
 	}
 	if (list[tokenCtr].type == readsym){
 		tokenCtr++;
+		// Errors if the token is not an identifer to be read
 		if (list[tokenCtr].type != identsym){
 			printparseerror(6);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		int symidx = findSymbol(list[tokenCtr], 2);
 		if (symidx == -1){
 			// If the symbol is found but is a const or procedure call error 6
 			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 3)){
 				printparseerror(6);
-				exit(0);
+				errorFlag = 1;
+				return;
 			} else {
 				// Other wise error due to undeclared identifier
 				printparseerror(19);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 		}
 		tokenCtr++;
@@ -375,6 +453,9 @@ void statement(lexeme *list){
 	if (list[tokenCtr].type == writesym){
 		tokenCtr++;
 		expression(list);
+		if (errorFlag == 1){
+			return;
+		}
 		// Write
 		emit(9, 0, 1);
 		return;
@@ -383,12 +464,16 @@ void statement(lexeme *list){
 		tokenCtr++;
 		int symidx = findSymbol(list[tokenCtr], 3);
 		if (symidx == -1){
+			// Errors if an identifier with the name of the token is found but its not an identifer
 			if (findSymbol(list[tokenCtr], 1) != findSymbol(list[tokenCtr], 2)){
 				printparseerror(7);
-				exit(0);
+				errorFlag = 1;
+				return;
 			} else {
+				// Error due to the identifier not being found
 				printparseerror(19);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 		}
 		tokenCtr++;
@@ -403,50 +488,76 @@ void condition(lexeme *list){
 	if (list[tokenCtr].type == oddsym){
 		tokenCtr++;
 		expression(list);
+		if (errorFlag == 1){
+			return;
+		}
 		// ODD
 		emit(2, 0, 6);
 	}
 	else {
 		expression(list);
+		if (errorFlag == 1){
+			return;
+		}
 		if (list[tokenCtr].type == eqlsym){
 			tokenCtr++;
 			expression(list);
+			if (errorFlag == 1){
+				return;
+			}
 			// EQL
 			emit(2, 0, 8);
 		}
 		else if (list[tokenCtr].type == neqsym){
 			tokenCtr++;
 			expression(list);
+			if (errorFlag == 1){
+				return;
+			}
 			// NEQ
 			emit(2, 0, 9);
 		}
 		else if (list[tokenCtr].type == lsssym){
 			tokenCtr++;
 			expression(list);
+			if (errorFlag == 1){
+				return;
+			}
 			// LSS
 			emit(2, 0, 10);
 		}
 		else if (list[tokenCtr].type == leqsym){
 			tokenCtr++;
 			expression(list);
+			if (errorFlag == 1){
+				return;
+			}
 			// LEQ
 			emit(2, 0, 11);
 		}
 		else if (list[tokenCtr].type == gtrsym){
 			tokenCtr++;
 			expression(list);
+			if (errorFlag == 1){
+				return;
+			}
 			// GTR
 			emit(2, 0, 12);
 		}
 		else if (list[tokenCtr].type == geqsym){
 			tokenCtr++;
 			expression(list);
+			if (errorFlag == 1){
+				return;
+			}
 			// GEQ
 			emit(2, 0, 13);
 		}
 		else {
+			// Errors if the token is not a relational operator such as == 
 			printparseerror(10);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 	}
 }
@@ -456,18 +567,27 @@ void expression(lexeme *list){
 	if (list[tokenCtr].type == subsym){
 		tokenCtr++;
 		term(list);
+		if (errorFlag == 1){
+			return;
+		}
 		//NEG
 		emit(2, 0, 1);
 		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
 			if (list[tokenCtr].type == addsym){
 				tokenCtr++;
 				term(list); // Get next factor for math
+				if (errorFlag == 1){
+					return;
+				}
 				// ADD
 				emit(2, 0, 2);
 			}
 			else {
 				tokenCtr++;
 				term(list); // Get next factor for math
+				if (errorFlag == 1){
+					return;
+				}
 				// SUB
 				emit(2, 0, 3);
 			}
@@ -477,16 +597,25 @@ void expression(lexeme *list){
 		if (list[tokenCtr].type == addsym)
 			tokenCtr++;
 		term(list);
+		if (errorFlag == 1){
+			return;
+		}
 		while (list[tokenCtr].type == addsym || list[tokenCtr].type == subsym){
 			if (list[tokenCtr].type == addsym){
 				tokenCtr++;
 				term(list); // Get next factor for math
+				if (errorFlag == 1){
+					return;
+				}
 				// ADD
 				emit(2, 0, 2);
 			}
 			else {
 				tokenCtr++;
 				term(list); // Get next factor for math
+				if (errorFlag == 1){
+					return;
+				}
 				// SUB
 				emit(2, 0, 3);
 			}
@@ -494,7 +623,8 @@ void expression(lexeme *list){
 		// Bad Arithmatic Error
 		if (list[tokenCtr].type == identsym || list[tokenCtr].type == numbersym || list[tokenCtr].type == oddsym){
 			printparseerror(17);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 	}
 }
@@ -503,6 +633,9 @@ void term(lexeme *list){
 	// printf("term has been called\n");
 	// Get a factor for the math
 	factor(list);
+	if (errorFlag == 1){
+		return;
+	}
 	// check for multiplication, division, and modulo since those have higher priority than + -
 	while (list[tokenCtr].type == multsym || list[tokenCtr].type == divsym ||
 		   list[tokenCtr].type == modsym)
@@ -510,16 +643,25 @@ void term(lexeme *list){
 		if (list[tokenCtr].type == multsym){
 			tokenCtr++;
 			factor(list); // Get next factor for math
+			if (errorFlag == 1){
+				return;
+			}
 			// MUL
 			emit(2, 0, 4);
 		} else if (list[tokenCtr].type == divsym){
 			tokenCtr++;
 			factor(list); // Get next factor for math
+			if (errorFlag == 1){
+				return;
+			}
 			// DIV
 			emit(2, 0, 5);
 		} else {
 			tokenCtr++;
 			factor(list); // Get next factor for math
+			if (errorFlag == 1){
+				return;
+			}
 			// MOD
 			emit(2, 0, 7);
 		}
@@ -538,11 +680,13 @@ void factor(lexeme *list){
 			// Print a specific error if the ident was a procedure
 			if (findSymbol(list[tokenCtr], 3) != -1){
 				printparseerror(11);
-				exit(0);
+				errorFlag = 1;
+				return;
 			// Print an error for invalid identifer
 			} else {
 				printparseerror(19);
-				exit(0);
+				errorFlag = 1;
+				return;
 			}
 		}
 		// Emit to the code 
@@ -565,16 +709,21 @@ void factor(lexeme *list){
 		tokenCtr++;
 		// Get the code inside of the parenthesis 
 		expression(list);
+		if (errorFlag == 1){
+			return;
+		}
 		// Error if no right parenthesis is found
 		if (list[tokenCtr].type != rparensym){
 			printparseerror(12);
-			exit(0);
+			errorFlag = 1;
+			return;
 		}
 		tokenCtr++;
 		// Error since only math expressions can only have const, var, num, and parenthesis
 	} else{
 		printparseerror(11);
-		exit(0);
+		errorFlag = 1;
+		return;
 	}
 }
 
