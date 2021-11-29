@@ -1,0 +1,9 @@
+var x;
+procedure alpha;;
+begin
+	x := 14 * 3 + (51 % 7);
+    while x != 20 do
+        begin
+            call alpha
+        end;
+end.
